@@ -1,0 +1,31 @@
+
+FROM node:20-alpine AS build
+RUN corepack enable
+WORKDIR /repo
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages/shared-kernel/package.json packages/shared-kernel/
+COPY packages/messaging/package.json     packages/messaging/
+COPY apps/inventory-svc/package.json     apps/inventory-svc/
+
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+
+COPY packages ./packages
+COPY apps/inventory-svc ./apps/inventory-svc
+RUN pnpm -r build
+
+
+RUN pnpm deploy --filter inventory-svc --prod /prod
+
+
+FROM node:20-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+
+
+COPY --from=build /prod/inventory-svc /app
+
+
+CMD ["node","dist/index.js"]
