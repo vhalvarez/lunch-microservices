@@ -1,0 +1,16 @@
+{
+  "name": "@lunch/scripts",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev:publish": "tsx publish-purchase-requested.ts"
+  },
+  "dependencies": {
+    "@lunch/messaging": "workspace:*",
+    "@lunch/shared-kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4",
+    "typescript": "^5"
+  }
+}
