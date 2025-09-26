@@ -17,5 +17,6 @@
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-promise": "^6.6.0",
     "typescript": "^5.9.2"
-  }
+  },
+  "version": "0.1.0"
 }

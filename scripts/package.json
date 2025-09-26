@@ -12,5 +12,6 @@
   "devDependencies": {
     "tsx": "^4",
     "typescript": "^5"
-  }
+  },
+  "version": "0.1.0"
 }
