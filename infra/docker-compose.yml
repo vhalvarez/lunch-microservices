@@ -6,8 +6,8 @@ services:
     container_name: lunch-rabbit
     restart: unless-stopped
     ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # UI gestión
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -51,6 +51,25 @@ services:
       retries: 20
 
   # compose
+
+  # inventory-svc:
+  #   build:
+  #     context: ..
+  #     dockerfile: apps/inventory-svc/Dockerfile
+  #   environment:
+  #     AMQP_URL: amqp://$RABBITMQ_USER:$RABBITMQ_PASS@rabbitmq:5672
+  #     DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lunchday}
+  #     REDIS_URL: redis://redis:6379
+  #     # (opcional) LOG_LEVEL: info
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  
   # market-adapter-svc:
   #   build:
   #     context: ..
