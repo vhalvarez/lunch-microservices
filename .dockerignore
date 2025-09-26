@@ -1,4 +1,18 @@
+# node/pnpm
 node_modules
+.pnpm-store
+**/*.tsbuildinfo
+
+# artefactos
 dist
+coverage
+
+# VCS/IDE
 .git
-.env
+.gitignore
+.vscode
+.DS_Store
+
+# logs y misc
+npm-debug.log*
+pnpm-debug.log*
