@@ -1,0 +1,26 @@
+{
+  "name": "inventory-svc",
+  "private": true,
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "migrate": "tsx src/migrate.ts"
+  },
+  "dependencies": {
+    "@lunch/messaging": "workspace:*",
+    "@lunch/shared-kernel": "workspace:*",
+    "ioredis": "^5.8.0",
+    "pg": "^8.16.3",
+    "pino": "^9.11.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.5",
+    "@types/node": "^22.18.6",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  }
+}
