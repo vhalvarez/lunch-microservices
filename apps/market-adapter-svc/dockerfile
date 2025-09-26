@@ -1,0 +1,22 @@
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/market-adapter-svc/package.json ./apps/market-adapter-svc/
+RUN corepack enable && pnpm install --frozen-lockfile
+
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY --from=deps /app /app
+COPY apps/market-adapter-svc ./apps/market-adapter-svc
+RUN corepack enable && pnpm --filter @lunch/shared-kernel --filter @lunch/messaging --filter market-adapter-svc -r build
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/apps/market-adapter-svc/dist ./apps/market-adapter-svc/dist
+COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY --from=build /app/packages/shared-kernel/dist ./packages/shared-kernel/dist
+COPY --from=build /app/packages/messaging/dist ./packages/messaging/dist
+RUN corepack enable && pnpm install --prod --filter market-adapter-svc
+CMD ["node","apps/market-adapter-svc/dist/index.js"]
