@@ -7,15 +7,19 @@
     "dev": "pnpm -r --parallel --filter './apps/**' dev",
     "lint": "eslint .",
     "typecheck": "tsc -b",
-    "start:market": "node apps/market-adapter-svc/dist/index.js"
+    "start:market": "node apps/market-adapter-svc/dist/index.js",
+    "fmt": "prettier --cache --write \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "fmt:check": "prettier --check \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\""
   },
   "devDependencies": {
     "@types/node": "^20.19.17",
     "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-config-standard-with-typescript": "^43.0.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-promise": "^6.6.0",
+    "prettier": "^3.6.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   },
