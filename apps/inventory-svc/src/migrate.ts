@@ -70,6 +70,12 @@ async function main() {
       alter table reservation_items
         add constraint reservation_items_reserved_nonneg check (reserved >= 0);
     exception when duplicate_object then null; end $$;
+
+    do $$ begin
+      alter table reservation_items
+        add constraint reservation_items_reserved_le_needed
+        check (reserved <= needed);
+    exception when duplicate_object then null; end $$;
   `);
 
   await client.query(`
