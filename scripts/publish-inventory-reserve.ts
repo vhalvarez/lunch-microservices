@@ -1,15 +1,9 @@
 // publish-inventory-reserve.ts
 import { randomUUID } from 'crypto';
+import { env } from '@lunch/config';
 import { Bus } from '@lunch/messaging';
 import { Exchanges, RoutingKeys, type Ingredient } from '@lunch/shared-kernel';
 
-/**
- *
- * pnpm --filter @lunch/scripts exec tsx scripts/publish-inventory-reserve.ts --plates 3
- *
- * Flags:
- *   --plates N -> cantidad de platos a publicar (default 1)
- */
 function argNum(name: string, def: number) {
   const ix = process.argv.indexOf(`--${name}`);
   if (ix >= 0 && process.argv[ix + 1]) {
@@ -50,7 +44,7 @@ const sampleItems = Array.from({ length: 2 + randInt(0, 2) }).map(() => {
 
 async function main() {
   const bus = new Bus({
-    url: process.env.AMQP_URL || 'amqp://guest:guest@localhost',
+    url: env.AMQP_URL,
   });
   await bus.connect();
 

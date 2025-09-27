@@ -49,6 +49,7 @@ Automatiza una jornada masiva de platos gratis. La cocina selecciona recetas; in
 docker compose -f infra/docker-compose.yml up -d
 
 # 2) Build de paquetes compartidos
+pnpm -F @lunch/config build
 pnpm -F @lunch/shared-kernel build
 pnpm -F @lunch/messaging build
 
@@ -63,4 +64,4 @@ pnpm -F inventory-svc dev
 pnpm -F market-adapter-svc dev
 
 # 5) Publicar N platos de prueba (ej. 100)
-pnpm --filter @lunch/scripts dev:publish:inventory --plates 100
+pnpm --filter @lunch/scripts dev:publish:inventory --plates 200
