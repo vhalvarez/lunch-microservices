@@ -2,6 +2,7 @@ import pino from 'pino';
 import { Pool, PoolClient } from 'pg';
 import Redis from 'ioredis';
 import { randomUUID } from 'crypto';
+import { env } from '@lunch/config'
 import { Bus } from '@lunch/messaging';
 import {
   Exchanges,
@@ -16,11 +17,7 @@ import { startReconciler } from './reconciler';
 
 const log = pino({ name: 'inventory-svc' });
 
-const DATABASE_URL =
-  process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lunchday';
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-
-const pool = new Pool({ connectionString: DATABASE_URL });
+const pool = new Pool({ connectionString: env.DATABASE_URL });
 
 async function withIdempotency(redis: Redis, messageId: string, fn: () => Promise<void>) {
   const key = `idem:${messageId}`;
@@ -56,7 +53,7 @@ async function main() {
   });
   await bus.connect();
 
-  const redis = new Redis(REDIS_URL);
+  const redis = new Redis(env.REDIS_URL);
 
   await bus.subscribe(
     'inventory.reserve.requested.q',
