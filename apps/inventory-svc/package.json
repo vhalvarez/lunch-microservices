@@ -12,6 +12,7 @@
   "dependencies": {
     "@lunch/messaging": "workspace:*",
     "@lunch/shared-kernel": "workspace:*",
+    "@lunch/config": "workspace:*",
     "ioredis": "^5.8.0",
     "pg": "^8.16.3",
     "pino": "^9.11.0",

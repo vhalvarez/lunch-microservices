@@ -1,7 +1,5 @@
 import { Client } from 'pg';
-
-const DATABASE_URL =
-  process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lunchday';
+import { env } from '@lunch/config'
 
 const INGREDIENTS = [
   'tomato',
@@ -17,7 +15,7 @@ const INGREDIENTS = [
 ] as const;
 
 async function main() {
-  const client = new Client({ connectionString: DATABASE_URL });
+  const client = new Client({ connectionString: env.DATABASE_URL });
   await client.connect();
 
   await client.query(`

@@ -1,11 +1,12 @@
+import { env } from '@lunch/config';
 import { Bus } from '@lunch/messaging';
 import { Exchanges, RoutingKeys } from '@lunch/shared-kernel';
 import { randomUUID } from 'crypto';
 
 async function main() {
   const bus = new Bus({
-    url: process.env.AMQP_URL || 'amqp://guest:guest@localhost',
-    prefetch: 30,
+    url: env.AMQP_URL,
+    prefetch: 50,
   });
   await bus.connect();
 

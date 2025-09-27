@@ -9,7 +9,8 @@
     "typecheck": "tsc -b",
     "start:market": "node apps/market-adapter-svc/dist/index.js",
     "fmt": "prettier --cache --write \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\"",
-    "fmt:check": "prettier --check \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\""
+    "fmt:check": "prettier --check \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "build:shared": "pnpm -F @lunch/config build && pnpm -F @lunch/shared-kernel build && pnpm -F @lunch/messaging build"
   },
   "devDependencies": {
     "@types/node": "^20.19.17",
@@ -23,5 +24,8 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   },
-  "version": "0.3.0"
+  "version": "0.3.0",
+  "dependencies": {
+    "dotenv": "^17.2.2"
+  }
 }

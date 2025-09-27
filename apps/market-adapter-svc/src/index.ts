@@ -2,24 +2,17 @@ import { request } from 'undici';
 import pino from 'pino';
 import { randomUUID } from 'crypto';
 import { Client } from 'pg';
+import { env } from '@lunch/config';
 import { Bus } from '@lunch/messaging';
 import { Exchanges, RoutingKeys, PurchaseRequested, PurchaseCompleted } from '@lunch/shared-kernel';
 
 const log = pino({ name: 'market-adapter' });
 
-const MARKET = process.env.MARKET_URL || 'https://recruitment.alegra.com/api/farmers-market';
-const DATABASE_URL =
-  process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lunchday';
-
-const PREFETCH = Number(process.env.MARKET_PREFETCH ?? 30);
-const MAX_ATTEMPTS = Number(process.env.MARKET_MAX_ATTEMPTS ?? 6);
-const BASE_BACKOFF_MS = Number(process.env.MARKET_BASE_BACKOFF_MS ?? 150);
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const jitter = (ms: number) => ms + Math.floor(Math.random() * 75);
 
 async function buyOnce(ingredient: string): Promise<number> {
-  const url = `${MARKET}/buy?ingredient=${encodeURIComponent(ingredient)}`;
+  const url = `${env.MARKET_URL}/buy?ingredient=${encodeURIComponent(ingredient)}`;
   const res = await request(url, {
     method: 'GET',
     headers: { accept: 'application/json' },
@@ -34,16 +27,16 @@ async function buyOnce(ingredient: string): Promise<number> {
 async function main() {
   // AMQP
   const bus = new Bus({
-    url: process.env.AMQP_URL,
-    prefetch: PREFETCH,
+    url: env.AMQP_URL,
+    prefetch: env.RMQ_PREFETCH,
   });
   await bus.connect();
 
   // Postgres
-  const pg = new Client({ connectionString: DATABASE_URL });
+  const pg = new Client({ connectionString: env.DATABASE_URL });
   await pg.connect();
 
-  // Helper para registrar cada intento en el historial
+  // * Helper para registrar cada intento en el historial
   async function recordMarketPurchase(params: {
     plateId: string;
     ingredient: string;
@@ -78,7 +71,7 @@ async function main() {
       for (const s of e.shortages) {
         let remaining = s.missing;
 
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS && remaining > 0; attempt++) {
+        for (let attempt = 1; attempt <= env.MARKET_MAX_ATTEMPTS && remaining > 0; attempt++) {
           const qtyRequestedNow = remaining;
 
           const sold = await buyOnce(s.ingredient).catch(() => 0);
@@ -93,7 +86,6 @@ async function main() {
             'market response',
           );
 
-          // Guardar intento en historial (aunque sold sea 0)
           await recordMarketPurchase({
             plateId: e.plateId,
             ingredient: s.ingredient,
@@ -105,13 +97,11 @@ async function main() {
             purchased[s.ingredient] = (purchased[s.ingredient] ?? 0) + sold;
             remaining = Math.max(0, remaining - sold);
           } else {
-            // backoff con jitter incremental
-            await sleep(jitter(BASE_BACKOFF_MS * attempt));
+            await sleep(jitter(env.MARKET_BASE_BACKOFF_MS * attempt));
           }
         }
 
         if (remaining > 0) {
-          // Agotamos reintentos para este ingrediente → publish failed y salimos
           await bus.publish(Exchanges.purchase, RoutingKeys.purchaseFailed, {
             messageId: randomUUID(),
             plateId: e.plateId,
@@ -122,7 +112,6 @@ async function main() {
         }
       }
 
-      // Si llegamos aquí, logramos cubrir todos los faltantes
       const done: PurchaseCompleted = {
         messageId: randomUUID(),
         plateId: e.plateId,
@@ -138,7 +127,6 @@ async function main() {
 
   log.info('market-adapter-svc up');
 
-  // Cierre limpio opcional
   const shutdown = async () => {
     try {
       await pg.end();
