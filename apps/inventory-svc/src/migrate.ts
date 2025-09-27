@@ -1,20 +1,19 @@
-import { Client } from "pg";
+import { Client } from 'pg';
 
 const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  "postgres://postgres:postgres@localhost:5432/lunchday";
+  process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/lunchday';
 
 const INGREDIENTS = [
-  "tomato",
-  "lemon",
-  "potato",
-  "rice",
-  "ketchup",
-  "lettuce",
-  "onion",
-  "cheese",
-  "meat",
-  "chicken",
+  'tomato',
+  'lemon',
+  'potato',
+  'rice',
+  'ketchup',
+  'lettuce',
+  'onion',
+  'cheese',
+  'meat',
+  'chicken',
 ] as const;
 
 async function main() {
@@ -38,10 +37,6 @@ async function main() {
       reserved int not null default 0,
       primary key(plate_id, ingredient)
     );
-    create table if not exists processed_messages(
-      message_id uuid primary key,
-      processed_at timestamptz not null default now()
-    );
   `);
 
   for (const ing of INGREDIENTS) {
@@ -49,11 +44,54 @@ async function main() {
       `insert into stock(ingredient, qty)
        values($1, 5)
        on conflict (ingredient) do nothing`,
-      [ing]
+      [ing],
     );
   }
 
-  console.log("migrated + seeded (y)");
+  await client.query(`
+    alter table reservations
+      add column if not exists retry_count int not null default 0,
+      add column if not exists last_retry_at timestamptz null,
+      add column if not exists prepared_at timestamptz null
+  `);
+
+  await client.query(`
+    do $$ begin
+      alter table stock
+        add constraint stock_qty_nonneg check (qty >= 0);
+    exception when duplicate_object then null; end $$;
+
+    do $$ begin
+      alter table reservation_items
+        add constraint reservation_items_needed_nonneg check (needed >= 0);
+    exception when duplicate_object then null; end $$;
+
+    do $$ begin
+      alter table reservation_items
+        add constraint reservation_items_reserved_nonneg check (reserved >= 0);
+    exception when duplicate_object then null; end $$;
+  `);
+
+  await client.query(`
+    create table if not exists market_purchases(
+      id bigserial primary key,
+      plate_id uuid not null,
+      ingredient text not null,
+      qty_requested int not null check (qty_requested >= 0),
+      quantity_sold int not null check (quantity_sold >= 0),
+      created_at timestamptz not null default now()
+    );
+    create index if not exists idx_market_purchases_plate on market_purchases(plate_id);
+    create index if not exists idx_market_purchases_ing on market_purchases(ingredient);
+  `);
+
+  await client.query(`
+    create index if not exists idx_reservations_status on reservations(status);
+    create index if not exists idx_reservations_last_retry on reservations(last_retry_at);
+    create index if not exists idx_reservation_items_plate on reservation_items(plate_id);
+  `);
+
+  console.log('migrated + seeded (y)');
   await client.end();
 }
 
