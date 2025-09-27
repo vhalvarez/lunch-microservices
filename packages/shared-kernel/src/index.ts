@@ -1,19 +1,19 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const Ingredient = z
   .enum([
-    "tomato",
-    "lemon",
-    "potato",
-    "rice",
-    "ketchup",
-    "lettuce",
-    "onion",
-    "cheese",
-    "meat",
-    "chicken",
+    'tomato',
+    'lemon',
+    'potato',
+    'rice',
+    'ketchup',
+    'lettuce',
+    'onion',
+    'cheese',
+    'meat',
+    'chicken',
   ])
-  .describe("Ingredient");
+  .describe('Ingredient');
 export type Ingredient = z.infer<typeof Ingredient>;
 
 export const Item = z
@@ -21,7 +21,7 @@ export const Item = z
     ingredient: Ingredient,
     qty: z.number().int().positive(),
   })
-  .describe("Item");
+  .describe('Item');
 export type Item = z.infer<typeof Item>;
 
 export const PurchaseRequested = z
@@ -33,11 +33,11 @@ export const PurchaseRequested = z
         z.object({
           ingredient: Ingredient,
           missing: z.number().int().positive(),
-        })
+        }),
       )
       .min(1),
   })
-  .describe("PurchaseRequested");
+  .describe('PurchaseRequested');
 export type PurchaseRequested = z.infer<typeof PurchaseRequested>;
 
 export const PurchaseCompleted = z
@@ -49,20 +49,20 @@ export const PurchaseCompleted = z
         z.object({
           ingredient: Ingredient,
           qty: z.number().int().positive(),
-        })
+        }),
       )
       .min(1),
   })
-  .describe("PurchaseCompleted");
+  .describe('PurchaseCompleted');
 export type PurchaseCompleted = z.infer<typeof PurchaseCompleted>;
 
 export const PurchaseFailed = z
   .object({
     messageId: z.uuid(),
     plateId: z.uuid(),
-    reason: z.string().min(1).default("unavailable"),
+    reason: z.string().min(1).default('unavailable'),
   })
-  .describe("PurchaseFailed");
+  .describe('PurchaseFailed');
 export type PurchaseFailed = z.infer<typeof PurchaseFailed>;
 
 export const InventoryReserveRequested = z
@@ -71,10 +71,8 @@ export const InventoryReserveRequested = z
     plateId: z.uuid(),
     items: z.array(Item).min(1),
   })
-  .describe("InventoryReserveRequested");
-export type InventoryReserveRequested = z.infer<
-  typeof InventoryReserveRequested
->;
+  .describe('InventoryReserveRequested');
+export type InventoryReserveRequested = z.infer<typeof InventoryReserveRequested>;
 
 export const InventoryReserved = z
   .object({
@@ -82,7 +80,7 @@ export const InventoryReserved = z
     plateId: z.uuid(),
     items: z.array(Item).min(1),
   })
-  .describe("InventoryReserved");
+  .describe('InventoryReserved');
 export type InventoryReserved = z.infer<typeof InventoryReserved>;
 
 export const InventoryFailed = z
@@ -91,25 +89,25 @@ export const InventoryFailed = z
     plateId: z.uuid(),
     reason: z.string().min(1),
   })
-  .describe("InventoryFailed");
+  .describe('InventoryFailed');
 export type InventoryFailed = z.infer<typeof InventoryFailed>;
 
 export const Exchanges = {
-  purchase: "purchase",
-  inventory: "inventory",
-  plate: "plate",
-  order: "order",
+  purchase: 'purchase',
+  inventory: 'inventory',
+  plate: 'plate',
+  order: 'order',
 } as const;
 
 export const RoutingKeys = {
-  purchaseRequested: "purchase.requested",
-  purchaseCompleted: "purchase.completed",
-  purchaseFailed: "purchase.failed",
-  inventoryReserveRequested: "inventory.reserve.requested",
-  inventoryReserved: "inventory.reserved",
-  inventoryFailed: "inventory.failed",
-  plateRequested: "plate.requested",
-  platePrepared: "plate.prepared",
+  purchaseRequested: 'purchase.requested',
+  purchaseCompleted: 'purchase.completed',
+  purchaseFailed: 'purchase.failed',
+  inventoryReserveRequested: 'inventory.reserve.requested',
+  inventoryReserved: 'inventory.reserved',
+  inventoryFailed: 'inventory.failed',
+  plateRequested: 'plate.requested',
+  platePrepared: 'plate.prepared',
 } as const;
 
 export const Requirement = z.object({
