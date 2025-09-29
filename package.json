@@ -4,19 +4,41 @@
   "description": "Monorepo para el proyecto Lunch Alegra - Microservicios y Frontend",
   "private": true,
   "scripts": {
-    "install:microservices": "cd microservices && npm install",
-    "install:frontend": "cd frontend && npm install",
+    "install:microservices": "cd microservices && pnpm install",
+    "install:frontend": "cd frontend && pnpm install",
     "install:all": "npm run install:microservices && npm run install:frontend",
-    "dev:microservices": "cd microservices && npm run dev",
-    "dev:frontend": "cd frontend && npm start",
-    "build:microservices": "cd microservices && npm run build",
-    "build:frontend": "cd frontend && npm run build",
+    
+    "dev:infra": "cd microservices/infra && docker-compose up -d",
+    "dev:infra:down": "cd microservices/infra && docker-compose down",
+    "dev:infra:logs": "cd microservices/infra && docker-compose logs -f",
+    "dev:microservices": "npm run dev:infra && cd microservices && pnpm run dev",
+    "dev:frontend": "cd frontend && pnpm run dev",
+    "dev:all": "concurrently \"npm run dev:microservices\" \"npm run dev:frontend\"",
+    
+    "prod:up": "cd microservices/infra && docker-compose -f docker-compose.prod.yml up -d",
+    "prod:down": "cd microservices/infra && docker-compose -f docker-compose.prod.yml down",
+    "prod:build": "cd microservices/infra && docker-compose -f docker-compose.prod.yml build",
+    "prod:rebuild": "cd microservices/infra && docker-compose -f docker-compose.prod.yml build --no-cache",
+    "prod:logs": "cd microservices/infra && docker-compose -f docker-compose.prod.yml logs -f",
+    "prod:restart": "npm run prod:down && npm run prod:up",
+    
+    "docker:clean": "docker system prune -f && docker volume prune -f",
+    "docker:clean:all": "docker system prune -a -f && docker volume prune -f",
+    
+    "build:microservices": "cd microservices && pnpm run build",
+    "build:frontend": "cd frontend && pnpm run build",
     "build:all": "npm run build:microservices && npm run build:frontend",
-    "test:microservices": "cd microservices && npm test",
-    "test:frontend": "cd frontend && npm test",
+    
+    "test:microservices": "cd microservices && pnpm test",
+    "test:frontend": "cd frontend && pnpm test",
     "test:all": "npm run test:microservices && npm run test:frontend",
-    "clean:microservices": "cd microservices && rm -rf node_modules",
-    "clean:frontend": "cd frontend && rm -rf node_modules",
+    
+    "lint:microservices": "cd microservices && pnpm run lint",
+    "lint:frontend": "cd frontend && pnpm run lint",
+    "lint:all": "npm run lint:microservices && npm run lint:frontend",
+    
+    "clean:microservices": "cd microservices && rimraf node_modules pnpm-lock.yaml",
+    "clean:frontend": "cd frontend && rimraf node_modules pnpm-lock.yaml",
     "clean:all": "npm run clean:microservices && npm run clean:frontend"
   },
   "workspaces": [
@@ -29,6 +51,10 @@
     "monorepo",
     "lunch-alegra"
   ],
-  "author": "Tu nombre",
-  "license": "MIT"
+  "author": "Victor Alvarez",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^6.0.1"
+  }
 }
