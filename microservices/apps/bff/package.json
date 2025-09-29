@@ -20,6 +20,7 @@
     "@lunch/messaging": "workspace:*",
     "@lunch/shared-kernel": "workspace:*",
     "@lunch/recipes": "workspace:*",
+    "@lunch/recommender-ai": "workspace:*",
     "@lunch/db": "workspace:*",
     "zod": "^4.1.11"
   },

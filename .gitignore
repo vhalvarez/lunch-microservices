@@ -1,16 +1,99 @@
-# deps
+# Dependencies
 node_modules/
-
-# builds
-dist/
-*.tsbuildinfo
-
-# env & local
-.env
-.env.*.local
-.DS_Store
-
-# logs
-*.log
 npm-debug.log*
-pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Build outputs
+dist/
+build/
+out/
+
+# Database
+*.sqlite
+*.db
+
+# Temporary files
+tmp/
+temp/
+
+# Docker
+.dockerignore
+
+# Miscellaneous
+*.tgz
+*.tar.gz
+
+# Frontend specific
+# React
+/frontend/build
+
+# Vue
+/frontend/dist
+
+# Angular
+/frontend/dist
+/frontend/tmp
+/frontend/out-tsc
+
+# Backend specific
+# Microservices build outputs
+/microservices/apps/*/dist
+/microservices/apps/*/build
+/microservices/packages/*/dist
+/microservices/packages/*/build

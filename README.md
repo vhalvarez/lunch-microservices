@@ -1,83 +1,55 @@
-# Lunch Day – Backend (Node/TS, microservicios, event-driven)
+# Lunch Alegra - Monorepo
 
-Automatiza una jornada masiva de donación de comida. El gerente presiona un botón para generar **N** platos (recetas aleatorias).  
-La cocina pide ingredientes a bodega; si faltan, se compran en la plaza de mercado; cuando están listos, se prepara y entrega.
+Este es el repositorio principal del proyecto Lunch Alegra, que contiene tanto los microservicios del backend como el frontend de la aplicación.
 
-Monorepo: **pnpm workspaces** (multi-paquete), con dependencias internas vía `workspace:*`. pnpm tiene soporte nativo para monorepos y archivo `pnpm-workspace.yaml`.
-Mensajería: **RabbitMQ** (topic exchanges). Se usa **prefetch/QoS** para limitar mensajes *unacked* por consumidor.
-Persistencia: **PostgreSQL**.  
-Cache/Idempotencia: **Redis**.  
-HTTP externo: **Alegra Farmers Market** (cliente **Undici**).  
-API/BFF: **Fastify**.
-
----
-
-- **order-svc**: publica lotes de órdenes (6 recetas aleatorias).
-- **inventory-svc**: intenta reservar stock; si falta → emite `purchase.requested`; cuando logra reservar todo → publica `inventory.reserved` (tiene reconciler).
-- **market-adapter-svc**: compra en la API pública y reporta `purchase.completed` / `purchase.failed`.
-- **kitchen-svc**: al recibir `inventory.reserved`, simula preparación (`prepared_at`) y emite `plate.prepared`.
-- **bff**: API para el gerente (botón de generar, dashboards y consultas).
-
----
-
-## 📦 Estructura
+## Estructura del proyecto
 
 ```
-apps/
-  bff/
-  inventory-svc/
-  kitchen-svc/
-  market-adapter-svc/
-  order-svc/
-packages/
-  bus/ config/ db/ logger/ messaging/ recipes/ redis/ shared-kernel/ utils/
-infra/ (docker-compose de RabbitMQ, Postgres, Redis)
+lunch-alegra-monorepo/
+├── microservices/          # Backend - Microservicios
+│   ├── apps/              # Aplicaciones de microservicios
+│   ├── packages/          # Paquetes compartidos
+│   ├── infra/             # Infraestructura
+│   └── scripts/           # Scripts de automatización
+├── frontend/              # Frontend de la aplicación
+└── docs/                  # Documentación del proyecto
 ```
 
-> El monorepo se maneja con **pnpm workspaces**; el archivo `pnpm-workspace.yaml` define qué carpetas forman parte del workspace.
+## Comenzar
 
----
+### Microservicios (Backend)
 
-## 🧰 Stack
-
-- **Node.js 20 + TypeScript**
-- **RabbitMQ** (topic exchanges, colas durables, **prefetch** para controlar mensajes *in-flight* por consumidor).
-- **PostgreSQL** (stock, reservas, items, compras, etc.)
-- **Redis** (idempotencia por `messageId`)
-- **Undici** (cliente HTTP moderno con **pooling/keep-alive**) para el adapter.
-- **Fastify** (BFF/API)
-
----
-
-## ▶️ Correr local
-
-**Requisitos**: Docker, Node 20, pnpm.
-
-1) **Infra** (RabbitMQ + Postgres + Redis)
 ```bash
-docker compose -f infra/docker-compose.yml up -d
+cd microservices
+npm install
+npm run dev
 ```
 
-2) **Instalar dependencias**
+### Frontend
+
 ```bash
-pnpm -w install
+cd frontend
+npm install
+npm start
 ```
 
-3) **Build de paquetes compartidos**
-```bash
-pnpm run build:shared
-```
+## Tecnologías utilizadas
 
-4) **Migraciones + seed de inventario**
-```bash
-pnpm -F inventory-svc run migrate
-```
+### Backend
+- Node.js
+- Microservicios
 
-5) **Levantar microservicios** (cada uno en su terminal)
-```bash
-pnpm -F inventory-svc dev
-pnpm -F market-adapter-svc dev
-pnpm -F kitchen-svc dev
-pnpm -F order-svc dev   
-pnpm -F bff dev
-```
+### Frontend
+- React/Vue/Angular (según tu stack)
+
+## Contribuir
+
+1. Haz fork del proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## Licencia
+
+[Tu licencia aquí]
