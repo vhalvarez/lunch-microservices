@@ -1,7 +1,7 @@
 {
   "name": "market-adapter-svc",
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",

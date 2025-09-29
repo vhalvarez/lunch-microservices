@@ -14,7 +14,7 @@ import {
   PurchaseFailed,
   type Ingredient,
 } from '@lunch/shared-kernel';
-import { startReconciler } from './reconciler';
+import { startReconciler } from './reconciler.js';
 
 const log = createLogger('inventory-svc');
 const pool = createPool(env.DATABASE_URL);

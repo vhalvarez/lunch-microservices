@@ -50,38 +50,6 @@ services:
       timeout: 3s
       retries: 20
 
-  # compose
-
-  # inventory-svc:
-  #   build:
-  #     context: ..
-  #     dockerfile: apps/inventory-svc/Dockerfile
-  #   environment:
-  #     AMQP_URL: amqp://$RABBITMQ_USER:$RABBITMQ_PASS@rabbitmq:5672
-  #     DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lunchday}
-  #     REDIS_URL: redis://redis:6379
-  #     # (opcional) LOG_LEVEL: info
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   restart: unless-stopped
-  
-  # market-adapter-svc:
-  #   build:
-  #     context: ..
-  #     dockerfile: apps/market-adapter-svc/Dockerfile
-  #   environment:
-  #     AMQP_URL: amqp://guest:guest@rabbitmq:5672
-  #     MARKET_URL: https://recruitment.alegra.com/api/farmers-market
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   restart: unless-stopped
-
 volumes:
   pg_data:
   redis_data:

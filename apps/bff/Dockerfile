@@ -20,18 +20,18 @@ COPY packages/recipes/package.json ./packages/recipes/
 COPY packages/redis/package.json ./packages/redis/
 COPY packages/shared-kernel/package.json ./packages/shared-kernel/
 COPY packages/utils/package.json ./packages/utils/
-COPY apps/market-adapter-svc/package.json ./apps/market-adapter-svc/
+COPY apps/bff/package.json ./apps/bff/
 
 RUN pnpm -w install
 RUN pnpm install
 
 COPY packages ./packages
-COPY apps/market-adapter-svc ./apps/market-adapter-svc
+COPY apps/bff ./apps/bff
 
 RUN pnpm run build:shared
-RUN pnpm -F market-adapter-svc run build
+RUN pnpm -F bff run build
 
-RUN pnpm deploy --legacy --filter market-adapter-svc --prod /opt/app
+RUN pnpm deploy --legacy --filter bff --prod /opt/app
 
 ##########
 # Runner #

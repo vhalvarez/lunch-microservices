@@ -1,18 +1,16 @@
-# node/pnpm
-node_modules
-.pnpm-store
-**/*.tsbuildinfo
-
-# artefactos
-dist
-coverage
-
-# VCS/IDE
 .git
 .gitignore
+node_modules
+dist
+**/node_modules
+**/.turbo
+**/.cache
+**/.vite
+**/.DS_Store
+infra/.env*
+.env*
+coverage
+.idea
 .vscode
-.DS_Store
-
-# logs y misc
 npm-debug.log*
 pnpm-debug.log*
