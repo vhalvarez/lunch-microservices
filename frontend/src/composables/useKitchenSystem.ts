@@ -7,7 +7,7 @@ import {
   type ReservationListRow,
 } from "@/types/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { toast } from "vue-sonner";
 
 export function useKitchenSystem() {
