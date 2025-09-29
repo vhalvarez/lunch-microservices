@@ -7,10 +7,10 @@
     "dev": "pnpm -r --parallel --filter './apps/**' dev",
     "lint": "eslint .",
     "typecheck": "tsc -b",
-    "start:market": "node apps/market-adapter-svc/dist/index.js",
     "fmt": "prettier --cache --write \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\"",
-    "fmt:check": "prettier --check \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\"",
-    "build:shared": "pnpm -F @lunch/config build && pnpm -F @lunch/shared-kernel build && pnpm -F @lunch/messaging build"
+    "fmt:check": "prettier --check \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\" --write",
+    "clean:shared": "rimraf packages/**/dist",
+    "build:shared": "pnpm run clean:shared && pnpm -F @lunch/shared-kernel build && pnpm -F @lunch/messaging build && pnpm -F @lunch/config build && pnpm -F @lunch/logger build && pnpm -F @lunch/db build && pnpm -F @lunch/redis build && pnpm -F @lunch/utils build && pnpm -F @lunch/bus build && pnpm -F @lunch/recipes build"
   },
   "devDependencies": {
     "@types/node": "^20.19.17",
@@ -26,6 +26,7 @@
   },
   "version": "0.3.0",
   "dependencies": {
-    "dotenv": "^17.2.2"
+    "dotenv": "^17.2.2",
+    "rimraf": "^6.0.1"
   }
 }

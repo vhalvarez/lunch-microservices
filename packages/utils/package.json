@@ -1,5 +1,5 @@
 {
-  "name": "@lunch/messaging",
+  "name": "@lunch/utils",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -17,17 +17,10 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "clean": "rimraf dist",
-    "dev": "tsx watch src/index.ts"
-  },
-  "dependencies": {
-    "amqplib": "0.10.9",
-    "pino": "9.11.0"
+    "clean": "rimraf dist"
   },
   "devDependencies": {
-    "@types/amqplib": "0.10.6",
-    "rimraf": "6.0.1",
-    "tsx": "4.20.6",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "rimraf": "6.0.1"
   }
 }

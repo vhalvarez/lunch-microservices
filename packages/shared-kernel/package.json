@@ -1,16 +1,29 @@
 {
   "name": "@lunch/shared-kernel",
-  "version": "0.1.0",
-  "type": "commonjs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist"
   },
   "dependencies": {
-    "zod": "^4.1.11"
+    "zod": "4.1.11"
   },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "5.9.2",
+    "rimraf": "6.0.1"
   }
 }

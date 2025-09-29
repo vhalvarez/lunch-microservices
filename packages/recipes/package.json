@@ -1,5 +1,5 @@
 {
-  "name": "@lunch/messaging",
+  "name": "@lunch/recipes",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,6 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -21,13 +20,12 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
-    "amqplib": "0.10.9",
-    "pino": "9.11.0"
+    "@lunch/shared-kernel": "workspace:*",
+    "zod": "4.1.11"
   },
   "devDependencies": {
-    "@types/amqplib": "0.10.6",
-    "rimraf": "6.0.1",
-    "tsx": "4.20.6",
-    "typescript": "5.9.2"
+    "typescript": "5.9.x",
+    "rimraf": "6.x",
+    "tsx": "4.20.x"
   }
 }

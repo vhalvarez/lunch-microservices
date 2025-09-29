@@ -1,4 +1,4 @@
-import { connect as amqpConnect, ChannelModel, Channel, ConsumeMessage } from 'amqplib';
+import { connect as amqpConnect, Connection, Channel, ConsumeMessage } from 'amqplib';
 import pino from 'pino';
 
 export type Binding = { exchange: string; rk: string };
@@ -11,7 +11,7 @@ export interface BusOptions {
 }
 
 export class Bus {
-  private conn!: ChannelModel;
+  private conn!: Connection;
   private ch!: Channel;
   private log = pino({ name: 'bus' });
   private url: string;
@@ -25,7 +25,6 @@ export class Bus {
   }
 
   async connect(): Promise<void> {
-    // 👇 usa amqpConnect, no amqp.connect
     this.conn = await amqpConnect(this.url);
     this.conn.on('error', (err) => this.log.error({ err }, 'amqp connection error'));
     this.conn.on('close', () => this.log.warn('amqp connection closed'));

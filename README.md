@@ -1,67 +1,83 @@
-# Lunch Day – Backend (Node.js + TS, Microservicios)
+# Lunch Day – Backend (Node/TS, microservicios, event-driven)
 
-Automatiza una jornada masiva de platos gratis. La cocina selecciona recetas; inventario reserva insumos; si faltan, se compran en la plaza; cuando todo está, se entrega.
+Automatiza una jornada masiva de donación de comida. El gerente presiona un botón para generar **N** platos (recetas aleatorias).  
+La cocina pide ingredientes a bodega; si faltan, se compran en la plaza de mercado; cuando están listos, se prepara y entrega.
 
-## Arquitectura
-- **Event-driven** con **RabbitMQ** (topic exchanges)
-- **Postgres** (inventario), **Redis** (idempotencia rápida)
-- **Monorepo** con **pnpm workspaces** (Node 20 + TypeScript)
+Monorepo: **pnpm workspaces** (multi-paquete), con dependencias internas vía `workspace:*`. pnpm tiene soporte nativo para monorepos y archivo `pnpm-workspace.yaml`.
+Mensajería: **RabbitMQ** (topic exchanges). Se usa **prefetch/QoS** para limitar mensajes *unacked* por consumidor.
+Persistencia: **PostgreSQL**.  
+Cache/Idempotencia: **Redis**.  
+HTTP externo: **Alegra Farmers Market** (cliente **Undici**).  
+API/BFF: **Fastify**.
 
-## Paquetes compartidos
-- **@lunch/shared-kernel**: contratos Zod, `Exchanges`, `RoutingKeys`
-- **@lunch/messaging**: wrapper AMQP (`publish`/`subscribe`, prefetch, exchange topic)
+---
 
-## Microservicios (estado actual)
-- **inventory-svc**
-  - Escucha `inventory.reserve.requested` → intenta reservar desde `stock`
-  - Si falta, publica `purchase.requested { plateId, shortages[] }`
-  - Escucha `purchase.completed { purchased[] }` → suma a `stock`, completa reservas y publica `inventory.reserved`
-  - **Idempotencia**: Redis (`idem:${messageId}`, TTL 1h) – *no* se usa tabla en DB
-  - **Transacciones**: `pg.Pool` + `withTx` (un `PoolClient` por mensaje)
-  - **Eventos se publican tras `COMMIT`** (evita “no transaction in progress”)
-  - **Reconciler activo**: reintenta `pending` con backoff y marca `failed` al superar `MAX_RETRIES`
+- **order-svc**: publica lotes de órdenes (6 recetas aleatorias).
+- **inventory-svc**: intenta reservar stock; si falta → emite `purchase.requested`; cuando logra reservar todo → publica `inventory.reserved` (tiene reconciler).
+- **market-adapter-svc**: compra en la API pública y reporta `purchase.completed` / `purchase.failed`.
+- **kitchen-svc**: al recibir `inventory.reserved`, simula preparación (`prepared_at`) y emite `plate.prepared`.
+- **bff**: API para el gerente (botón de generar, dashboards y consultas).
 
-- **market-adapter-svc**
-  - Escucha `purchase.requested`; llama a **/farmers-market/buy** con reintentos y backoff
-  - Registra **cada intento** en `market_purchases (plate_id, ingredient, qty_requested, quantity_sold, created_at)`
-  - Publica `purchase.completed` cuando cubre faltantes; si agota reintentos, `purchase.failed`
+---
 
-> Pendientes: `kitchen-svc`, `order-svc`.
+## 📦 Estructura
 
-## Eventos (routing keys)
-- `inventory.reserve.requested` → `{ messageId, plateId, items: [{ingredient, qty}] }`
-- `purchase.requested` → `{ messageId, plateId, shortages: [{ingredient, missing}] }`
-- `purchase.completed` → `{ messageId, plateId, purchased: [{ingredient, qty}] }`
-- `inventory.reserved` → `{ messageId, plateId, items: [{ingredient, qty}] }`
-- `purchase.failed` → `{ messageId, plateId, ingredient, remaining }`
+```
+apps/
+  bff/
+  inventory-svc/
+  kitchen-svc/
+  market-adapter-svc/
+  order-svc/
+packages/
+  bus/ config/ db/ logger/ messaging/ recipes/ redis/ shared-kernel/ utils/
+infra/ (docker-compose de RabbitMQ, Postgres, Redis)
+```
 
-## Esquema de BD (tablas clave)
-- `stock(ingredient PK, qty CHECK qty>=0)`
-- `reservations(plate_id PK, status, retry_count, last_retry_at, prepared_at, created_at)`
-- `reservation_items(plate_id, ingredient PK, needed, reserved, CHECK reserved>=0 AND reserved<=needed)`
-- `market_purchases(id, plate_id, ingredient, qty_requested, quantity_sold, created_at)`
-- ❌ **Eliminada**: `processed_messages` (idempotencia actual es solo con Redis)
+> El monorepo se maneja con **pnpm workspaces**; el archivo `pnpm-workspace.yaml` define qué carpetas forman parte del workspace.
 
-## Cómo correr local
+---
 
+## 🧰 Stack
+
+- **Node.js 20 + TypeScript**
+- **RabbitMQ** (topic exchanges, colas durables, **prefetch** para controlar mensajes *in-flight* por consumidor).
+- **PostgreSQL** (stock, reservas, items, compras, etc.)
+- **Redis** (idempotencia por `messageId`)
+- **Undici** (cliente HTTP moderno con **pooling/keep-alive**) para el adapter.
+- **Fastify** (BFF/API)
+
+---
+
+## ▶️ Correr local
+
+**Requisitos**: Docker, Node 20, pnpm.
+
+1) **Infra** (RabbitMQ + Postgres + Redis)
 ```bash
-# 1) Infra
 docker compose -f infra/docker-compose.yml up -d
+```
 
-# 2) Build de paquetes compartidos
-pnpm -F @lunch/config build
-pnpm -F @lunch/shared-kernel build
-pnpm -F @lunch/messaging build
+2) **Instalar dependencias**
+```bash
+pnpm -w install
+```
 
-# 3) Migraciones / seed (Postgres)
+3) **Build de paquetes compartidos**
+```bash
+pnpm run build:shared
+```
+
+4) **Migraciones + seed de inventario**
+```bash
 pnpm -F inventory-svc run migrate
+```
 
-# 4) Servicios (terminales separadas)
-# inventory-svc
+5) **Levantar microservicios** (cada uno en su terminal)
+```bash
 pnpm -F inventory-svc dev
-
-# market-adapter-svc
 pnpm -F market-adapter-svc dev
-
-# 5) Publicar N platos de prueba (ej. 100)
-pnpm --filter @lunch/scripts dev:publish:inventory --plates 200
+pnpm -F kitchen-svc dev
+pnpm -F order-svc dev   
+pnpm -F bff dev
+```

@@ -92,6 +92,49 @@ export const InventoryFailed = z
   .describe('InventoryFailed');
 export type InventoryFailed = z.infer<typeof InventoryFailed>;
 
+export const PlatePrepared = z
+  .object({
+    messageId: z.uuid(),
+    plateId: z.uuid(),
+    preparedAt: z.string(),
+  })
+  .describe('PlatePrepared');
+export type PlatePrepared = z.infer<typeof PlatePrepared>;
+
+export const OrderCreateRequested = z.object({
+  messageId: z.uuid(),
+  count: z.number().int().positive(),
+});
+export type OrderCreateRequested = z.infer<typeof OrderCreateRequested>;
+
+export const ReservationsQuery = z.object({
+  status: z.enum(['pending', 'reserved', 'failed']).optional(),
+  prepared: z.coerce.boolean().optional(),
+  plateId: z.uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export const PurchasesQuery = z.object({
+  plateId: z.uuid().optional(),
+  ingredient: z
+    .enum([
+      'tomato',
+      'lemon',
+      'potato',
+      'rice',
+      'ketchup',
+      'lettuce',
+      'onion',
+      'cheese',
+      'meat',
+      'chicken',
+    ])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
 export const Exchanges = {
   purchase: 'purchase',
   inventory: 'inventory',
@@ -108,6 +151,7 @@ export const RoutingKeys = {
   inventoryFailed: 'inventory.failed',
   plateRequested: 'plate.requested',
   platePrepared: 'plate.prepared',
+  orderCreateRequested: 'order.create.requested',
 } as const;
 
 export const Requirement = z.object({

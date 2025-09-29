@@ -1,5 +1,5 @@
 {
-  "name": "@lunch/messaging",
+  "name": "@lunch/redis",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -17,17 +17,13 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "clean": "rimraf dist",
-    "dev": "tsx watch src/index.ts"
+    "clean": "rimraf dist"
   },
   "dependencies": {
-    "amqplib": "0.10.9",
-    "pino": "9.11.0"
+    "ioredis": "5.8.0"
   },
   "devDependencies": {
-    "@types/amqplib": "0.10.6",
     "rimraf": "6.0.1",
-    "tsx": "4.20.6",
     "typescript": "5.9.2"
   }
 }
