@@ -1,59 +1,50 @@
-import { request } from 'undici';
-import pino from 'pino';
 import { randomUUID } from 'crypto';
-import { Client } from 'pg';
+import { request } from 'undici';
 import { env } from '@lunch/config';
-import { Bus } from '@lunch/messaging';
+import { createLogger } from '@lunch/logger';
+import { createPool } from '@lunch/db';
+import { createBus } from '@lunch/bus';
 import { Exchanges, RoutingKeys, PurchaseRequested, PurchaseCompleted } from '@lunch/shared-kernel';
+import { jitter, sleep } from '@lunch/utils';
 
-const log = pino({ name: 'market-adapter' });
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const jitter = (ms: number) => ms + Math.floor(Math.random() * 75);
+const log = createLogger('market-adapter');
+const pg = createPool(env.DATABASE_URL);
 
 async function buyOnce(ingredient: string): Promise<number> {
   const url = `${env.MARKET_URL}/buy?ingredient=${encodeURIComponent(ingredient)}`;
   const res = await request(url, {
     method: 'GET',
     headers: { accept: 'application/json' },
-    maxRedirections: 0,
-    bodyTimeout: 2500,
   });
+
+  if (res.statusCode !== 200) return 0;
+
   const body = await res.body.json().catch(() => ({}) as any);
   const sold = Number((body as { quantitySold?: number })?.quantitySold ?? 0);
   return Number.isFinite(sold) ? sold : 0;
 }
 
-async function main() {
-  // AMQP
-  const bus = new Bus({
-    url: env.AMQP_URL,
-    prefetch: env.RMQ_PREFETCH,
-  });
-  await bus.connect();
-
-  // Postgres
-  const pg = new Client({ connectionString: env.DATABASE_URL });
-  await pg.connect();
-
-  // * Helper para registrar cada intento en el historial
-  async function recordMarketPurchase(params: {
-    plateId: string;
-    ingredient: string;
-    qtyRequested: number;
-    quantitySold: number;
-  }) {
-    const { plateId, ingredient, qtyRequested, quantitySold } = params;
-    try {
-      await pg.query(
-        `insert into market_purchases(plate_id, ingredient, qty_requested, quantity_sold)
-         values ($1, $2, $3, $4)`,
-        [plateId, ingredient, qtyRequested, quantitySold],
-      );
-    } catch (err) {
-      log.error({ err, plateId, ingredient }, 'failed to insert market_purchases');
-    }
+async function recordMarketPurchase(params: {
+  plateId: string;
+  ingredient: string;
+  qtyRequested: number;
+  quantitySold: number;
+}) {
+  const { plateId, ingredient, qtyRequested, quantitySold } = params;
+  try {
+    await pg.query(
+      `insert into market_purchases(plate_id, ingredient, qty_requested, quantity_sold)
+       values ($1, $2, $3, $4)`,
+      [plateId, ingredient, qtyRequested, quantitySold],
+    );
+  } catch (err) {
+    log.error({ err, plateId, ingredient }, 'failed to insert market_purchases');
   }
+}
+
+async function main() {
+  const bus = createBus(env.AMQP_URL, env.RMQ_PREFETCH);
+  await bus.connect();
 
   await bus.subscribe(
     'purchase.requested.q',
@@ -132,7 +123,7 @@ async function main() {
       await pg.end();
     } catch {}
     try {
-      await bus.close?.();
+      await (bus as any).close?.();
     } catch {}
     process.exit(0);
   };

@@ -1,5 +1,5 @@
-import { Client } from 'pg';
-import { env } from '@lunch/config'
+import { env } from '@lunch/config';
+import { createPool } from '@lunch/db';
 
 const INGREDIENTS = [
   'tomato',
@@ -15,19 +15,23 @@ const INGREDIENTS = [
 ] as const;
 
 async function main() {
-  const client = new Client({ connectionString: env.DATABASE_URL });
-  await client.connect();
+  const client = createPool(env.DATABASE_URL);
 
   await client.query(`
     create table if not exists stock(
       ingredient text primary key,
       qty int not null default 0
     );
+
     create table if not exists reservations(
       plate_id uuid primary key,
       status text not null, -- 'pending'|'reserved'|'failed'
-      created_at timestamptz not null default now()
+      created_at timestamptz not null default now(),
+      retry_count int not null default 0,
+      last_retry_at timestamptz null,
+      prepared_at timestamptz null
     );
+
     create table if not exists reservation_items(
       plate_id uuid not null references reservations(plate_id) on delete cascade,
       ingredient text not null,
@@ -45,13 +49,6 @@ async function main() {
       [ing],
     );
   }
-
-  await client.query(`
-    alter table reservations
-      add column if not exists retry_count int not null default 0,
-      add column if not exists last_retry_at timestamptz null,
-      add column if not exists prepared_at timestamptz null
-  `);
 
   await client.query(`
     do $$ begin
@@ -95,7 +92,7 @@ async function main() {
     create index if not exists idx_reservation_items_plate on reservation_items(plate_id);
   `);
 
-  console.log('migrated + seeded (y)');
+  console.log('migrated + seeded ✅');
   await client.end();
 }
 

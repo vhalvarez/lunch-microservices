@@ -1,9 +1,9 @@
-import pino from 'pino';
-import { Pool, PoolClient } from 'pg';
-import Redis from 'ioredis';
 import { randomUUID } from 'crypto';
-import { env } from '@lunch/config'
-import { Bus } from '@lunch/messaging';
+import { env } from '@lunch/config';
+import { createLogger } from '@lunch/logger';
+import { createPool, withTx } from '@lunch/db';
+import { createRedis, withIdempotency } from '@lunch/redis';
+import { createBus } from '@lunch/bus';
 import {
   Exchanges,
   RoutingKeys,
@@ -11,58 +11,23 @@ import {
   InventoryReserved,
   PurchaseRequested,
   PurchaseCompleted,
+  PurchaseFailed,
   type Ingredient,
 } from '@lunch/shared-kernel';
 import { startReconciler } from './reconciler';
 
-const log = pino({ name: 'inventory-svc' });
-
-const pool = new Pool({ connectionString: env.DATABASE_URL });
-
-async function withIdempotency(redis: Redis, messageId: string, fn: () => Promise<void>) {
-  const key = `idem:${messageId}`;
-  const ok = await redis.set(key, '1', 'EX', 60 * 60, 'NX'); // 1h
-  if (!ok) {
-    log.warn({ messageId }, 'duplicate message ignored');
-    return;
-  }
-  await fn();
-}
-
-async function withTx<T>(fn: (cx: PoolClient) => Promise<T>) {
-  const cx = await pool.connect();
-  try {
-    await cx.query('BEGIN');
-    const out = await fn(cx);
-    await cx.query('COMMIT');
-    return out;
-  } catch (err) {
-    try {
-      await cx.query('ROLLBACK');
-    } catch {}
-    throw err;
-  } finally {
-    cx.release();
-  }
-}
+const log = createLogger('inventory-svc');
+const pool = createPool(env.DATABASE_URL);
+const redis = createRedis(env.REDIS_URL);
 
 async function main() {
-  const bus = new Bus({
-    url: process.env.AMQP_URL,
-    prefetch: 50,
-  });
+  const bus = createBus(env.AMQP_URL, env.RMQ_PREFETCH);
   await bus.connect();
 
-  const redis = new Redis(env.REDIS_URL);
-
+  // inventory.reserve.requested
   await bus.subscribe(
     'inventory.reserve.requested.q',
-    [
-      {
-        exchange: Exchanges.inventory,
-        rk: RoutingKeys.inventoryReserveRequested,
-      },
-    ],
+    [{ exchange: Exchanges.inventory, rk: RoutingKeys.inventoryReserveRequested }],
     async (evt: unknown) => {
       const parsed = InventoryReserveRequested.safeParse(evt);
       if (!parsed.success) {
@@ -71,8 +36,8 @@ async function main() {
       }
       const e = parsed.data;
 
-      await withIdempotency(redis, e.messageId, async () => {
-        const { shortages } = await withTx(async (cx) => {
+      await withIdempotency(redis, e.messageId, 60 * 60, async () => {
+        const { shortages } = await withTx(pool, async (cx) => {
           await cx.query(
             `insert into reservations(plate_id, status)
              values ($1,'pending')
@@ -91,12 +56,11 @@ async function main() {
           }
 
           const shortages: Array<{ ingredient: Ingredient; missing: number }> = [];
-
           for (const r of e.items) {
-            const res = await cx.query('select qty from stock where ingredient=$1 for update', [
+            const row = await cx.query('select qty from stock where ingredient=$1 for update', [
               r.ingredient,
             ]);
-            const curr = Number(res?.rows?.[0]?.qty ?? 0);
+            const curr = Number(row?.rows?.[0]?.qty ?? 0);
 
             if (curr >= r.qty) {
               await cx.query('update stock set qty = qty - $1 where ingredient=$2', [
@@ -108,14 +72,20 @@ async function main() {
                 [r.qty, e.plateId, r.ingredient],
               );
             } else {
-              const missing = r.qty - Math.max(curr, 0);
-              shortages.push({
-                ingredient: r.ingredient as Ingredient,
-                missing,
-              });
-
-              if (curr > 0) {
-                await cx.query('update stock set qty = 0 where ingredient=$1', [r.ingredient]);
+              const reserveNow = Math.max(Math.min(curr, r.qty), 0);
+              if (reserveNow > 0) {
+                await cx.query('update stock set qty = qty - $1 where ingredient=$2', [
+                  reserveNow,
+                  r.ingredient,
+                ]);
+                await cx.query(
+                  'update reservation_items set reserved = reserved + $1 where plate_id=$2 and ingredient=$3',
+                  [reserveNow, e.plateId, r.ingredient],
+                );
+              }
+              const missing = r.qty - reserveNow;
+              if (missing > 0) {
+                shortages.push({ ingredient: r.ingredient as Ingredient, missing });
               }
             }
           }
@@ -126,7 +96,6 @@ async function main() {
               'reserved',
             ]);
           }
-
           return { shortages };
         });
 
@@ -140,16 +109,14 @@ async function main() {
           await bus.publish(Exchanges.inventory, RoutingKeys.inventoryReserved, {
             messageId: randomUUID(),
             plateId: e.plateId,
-            items: e.items.map((it) => ({
-              ingredient: it.ingredient,
-              qty: it.qty,
-            })),
+            items: e.items.map((it) => ({ ingredient: it.ingredient, qty: it.qty })),
           } satisfies InventoryReserved);
         }
       });
     },
   );
 
+  // purchase.completed
   await bus.subscribe(
     'purchase.completed.to.inventory.q',
     [{ exchange: Exchanges.purchase, rk: RoutingKeys.purchaseCompleted }],
@@ -161,8 +128,8 @@ async function main() {
       }
       const e = parsed.data;
 
-      await withIdempotency(redis, e.messageId, async () => {
-        const txOut = await withTx(async (cx) => {
+      await withIdempotency(redis, e.messageId, 60 * 60, async () => {
+        const txOut = await withTx(pool, async (cx) => {
           for (const p of e.purchased) {
             await cx.query(
               `insert into stock(ingredient, qty) values ($1,$2)
@@ -190,17 +157,19 @@ async function main() {
             ]);
             const curr = Number(row?.rows?.[0]?.qty ?? 0);
 
-            if (curr >= need) {
+            const reserveNow = Math.min(curr, need);
+            if (reserveNow > 0) {
               await cx.query('update stock set qty = qty - $1 where ingredient=$2', [
-                need,
+                reserveNow,
                 it.ingredient,
               ]);
               await cx.query(
                 'update reservation_items set reserved = reserved + $1 where plate_id=$2 and ingredient=$3',
-                [need, e.plateId, it.ingredient],
+                [reserveNow, e.plateId, it.ingredient],
               );
-            } else {
-              allOk = false;
+            }
+            if (reserveNow < need) {
+              allOk = false; // aún falta para este ingrediente
             }
           }
 
@@ -223,10 +192,7 @@ async function main() {
             return { allOk, itemsPub };
           }
 
-          return {
-            allOk,
-            itemsPub: [] as Array<{ ingredient: Ingredient; qty: number }>,
-          };
+          return { allOk, itemsPub: [] as Array<{ ingredient: Ingredient; qty: number }> };
         });
 
         if (txOut.allOk) {
@@ -242,6 +208,43 @@ async function main() {
     },
   );
 
+  // purchase.failed
+  await bus.subscribe(
+    'purchase.failed.to.inventory.q',
+    [{ exchange: Exchanges.purchase, rk: RoutingKeys.purchaseFailed }],
+    async (evt: unknown) => {
+      const parsed = PurchaseFailed.safeParse(evt);
+      if (!parsed.success) {
+        log.warn({ evt }, 'invalid PurchaseFailed');
+        return;
+      }
+      const e = parsed.data;
+
+      await withIdempotency(redis, e.messageId, 3600, async () => {
+        await withTx(pool, async (cx) => {
+          const { rows } = await cx.query(
+            `select 1
+               from reservation_items
+              where plate_id = $1
+                and needed > reserved
+              limit 1`,
+            [e.plateId],
+          );
+
+          if (rows.length > 0) {
+            await cx.query(
+              `update reservations
+                  set status = 'failed'
+                where plate_id = $1`,
+              [e.plateId],
+            );
+          }
+        });
+      });
+    },
+  );
+
+  // reintentos para pending
   startReconciler(pool as any, bus, redis);
 
   log.info('inventory-svc up');

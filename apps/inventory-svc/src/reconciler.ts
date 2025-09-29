@@ -1,6 +1,5 @@
-import pino from 'pino';
 import { randomUUID } from 'crypto';
-import type { Client } from 'pg';
+import type { Pool } from 'pg';
 import type Redis from 'ioredis';
 import { env } from '@lunch/config';
 import type { Bus } from '@lunch/messaging';
@@ -11,11 +10,11 @@ import {
   type PurchaseRequested,
   type InventoryReserved,
 } from '@lunch/shared-kernel';
+import { createLogger } from '@lunch/logger';
 
-const log = pino({ name: 'inventory-reconciler' });
+const log = createLogger('inventory-reconciler');
 
 function nextEligibleSQL() {
-  // last_retry_at + (1min * 2^retry_count) <= now()
   return `
     (last_retry_at IS NULL
      OR last_retry_at + (INTERVAL '${env.RECONCILER_BASE_DELAY_MIN} minutes' * POWER(2, GREATEST(retry_count,0))) <= now())
@@ -27,7 +26,7 @@ async function tryAcquireLock(redis: Redis, key = 'locks:inventory:reconciler', 
   return !!ok;
 }
 
-export async function runReconcilerOnce(pg: Client, bus: Bus, redis: Redis) {
+export async function runReconcilerOnce(pg: Pool, bus: Bus, redis: Redis) {
   const got = await tryAcquireLock(redis);
   if (!got) {
     log.debug('another reconciler is running; skipping');
@@ -76,7 +75,6 @@ export async function runReconcilerOnce(pg: Client, bus: Bus, redis: Redis) {
           }
         }
 
-        // marcar intento
         await pg.query(
           `UPDATE reservations
               SET retry_count = retry_count + 1,
@@ -130,10 +128,11 @@ export async function runReconcilerOnce(pg: Client, bus: Bus, redis: Redis) {
       [env.RECONCILER_MAX_RETRIES],
     );
   } finally {
+    // no-op
   }
 }
 
-export function startReconciler(pg: Client, bus: Bus, redis: Redis) {
+export function startReconciler(pg: Pool, bus: Bus, redis: Redis) {
   const everyMs = Number(env.RECONCILER_EVERY_MS ?? 15_000);
   setInterval(() => {
     runReconcilerOnce(pg, bus, redis).catch((e) => log.error({ e }, 'reconciler run error'));
