@@ -11,11 +11,11 @@
     "dev:infra": "cd microservices/infra && docker-compose up -d",
     "dev:infra:down": "cd microservices/infra && docker-compose down",
     "dev:infra:logs": "cd microservices/infra && docker-compose logs -f",
-    "dev:microservices": "npm run dev:infra && cd microservices && pnpm run dev",
+    "dev:microservices": "npm run dev:infra && cd microservices && pnpm -w install && pnpm install && pnpm run build:shared && pnpm -F inventory-svc run migrate",
     "dev:frontend": "cd frontend && pnpm run dev",
     "dev:all": "concurrently \"npm run dev:microservices\" \"npm run dev:frontend\"",
     
-    "prod:up": "cd microservices/infra && docker-compose -f docker-compose.prod.yml up -d",
+    "prod:up": "cd microservices/infra && docker-compose -f docker-compose.prod.yml up -d --build",
     "prod:down": "cd microservices/infra && docker-compose -f docker-compose.prod.yml down",
     "prod:build": "cd microservices/infra && docker-compose -f docker-compose.prod.yml build",
     "prod:rebuild": "cd microservices/infra && docker-compose -f docker-compose.prod.yml build --no-cache",

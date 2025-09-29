@@ -17,7 +17,8 @@
     "@lunch/messaging": "workspace:*",
     "@lunch/redis": "workspace:*",
     "@lunch/shared-kernel": "workspace:*",
-    "@lunch/utils": "workspace:*"
+    "@lunch/utils": "workspace:*",
+    "@lunch/recipes": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.20.6",

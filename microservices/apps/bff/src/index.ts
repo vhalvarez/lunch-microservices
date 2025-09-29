@@ -12,9 +12,8 @@ import {
   type OrderCreateRequested,
 } from '@lunch/shared-kernel';
 import { RECIPES } from '@lunch/recipes';
-import { recommendByIngredients } from '@lunch/recommender-ai';
 import { createPool } from '@lunch/db';
-import { PurchaseStats, PurchaseStatsRow } from './interfaces/purchase.interface;
+import { PurchaseStats, PurchaseStatsRow } from './interfaces/purchase.interface';
 
 const pool = createPool(env.DATABASE_URL);
 
@@ -57,46 +56,6 @@ async function main() {
       order by ingredient asc`,
     );
     return rows;
-  });
-
-  // Recomendaciones de recetas basadas en inventario + gustos/evitaciones
-  app.get('/recommendations', async (req, reply) => {
-    // Query params: ?k=5&likes=chicken,tomato&dislikes=onion&useInventory=true
-    const q = (req.query ?? {}) as Record<string, string | undefined>;
-    const k = Math.max(1, Math.min(20, Number(q.k ?? 5)));
-    const likes = (q.likes ?? '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const dislikes = (q.dislikes ?? '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const useInventory = (q.useInventory ?? 'true').toLowerCase() !== 'false';
-
-    let pantry: { ingredient: string; qty: number }[] = [];
-    if (useInventory) {
-      const { rows } = await pool.query<{ ingredient: string; qty: number }>(
-        `select ingredient, qty
-         from stock
-        order by ingredient asc`,
-      );
-      pantry = rows;
-    }
-
-    const recs = recommendByIngredients(
-      pantry,
-      { likes: likes as any, dislikes: dislikes as any },
-      { k },
-    ).map((r) => ({
-      name: r.recipe.name,
-      score: Number(r.score.toFixed(4)),
-      coverage: Number(r.coverage.toFixed(4)),
-      missing: r.missing,
-      items: r.recipe.items,
-    }));
-
-    return { k, likes, dislikes, useInventory, data: recs };
   });
 
   app.get('/reservations', async (req, reply) => {

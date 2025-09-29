@@ -9,8 +9,8 @@
     "typecheck": "tsc -b",
     "fmt": "prettier --cache --write \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\"",
     "fmt:check": "prettier --check \"{apps,packages,scripts}/**/*.{ts,tsx,js,json,md,yml,yaml}\" --write",
-    "clean:shared": "rimraf \"packages/**/dist\"",
-    "build:shared": "pnpm run clean:shared && pnpm -F @lunch/shared-kernel build && pnpm -F @lunch/messaging build && pnpm -F @lunch/config build && pnpm -F @lunch/logger build && pnpm -F @lunch/db build && pnpm -F @lunch/redis build && pnpm -F @lunch/utils build && pnpm -F @lunch/bus build && pnpm -F @lunch/recipes build"
+    "clean:shared": "rimraf packages/**/dist",
+    "build:shared": "pnpm run clean:shared && pnpm -F @lunch/shared-kernel build && pnpm -F @lunch/messaging build && pnpm -F @lunch/config build && pnpm -F @lunch/logger build && pnpm -F @lunch/db build && pnpm -F @lunch/redis build && pnpm -F @lunch/utils build && pnpm -F @lunch/bus build && pnpm -F @lunch/recipes build && pnpm -F @lunch/recommender-ai build"
   },
   "devDependencies": {
     "@types/node": "^20.19.17",

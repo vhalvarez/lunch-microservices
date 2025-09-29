@@ -17,6 +17,7 @@
     "@lunch/redis": "workspace:*",
     "@lunch/shared-kernel": "workspace:*",
     "@lunch/utils": "workspace:*",
+    "@lunch/recipes": "workspace:*",
     "p-limit": "^7.1.1",
     "undici": "^7.16.0"
   },
