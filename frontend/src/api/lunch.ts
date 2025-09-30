@@ -1,44 +1,73 @@
-const BASE_URL = import.meta.env.VITE_BFF_URL ?? 'http://localhost:4000'
-
-async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`)
-  }
-  return res.json() as Promise<T>
-}
+import type {
+  GetInventoryResponse,
+  GetPurchasesResponseWire,
+  GetRecipesResponse,
+  GetReservationDetailResponseWire,
+  GetReservationsResponseWire,
+  GetStatsSummaryResponse,
+  PurchasesQueryParams,
+  ReservationsQueryParams,
+} from "@/types/api";
+import { lunchApi } from "./axios";
 
 export const api = {
-  postOrders: (count: number) =>
-    http<{ accepted: boolean; count: number }>(`/orders`, {
-      method: 'POST',
-      body: JSON.stringify({ count }),
-    }),
-  getRecipes: () => http<import('@/types/api').GetRecipesResponse>(`/recipes`),
-  getInventory: () => http<import('@/types/api').GetInventoryResponse>(`/inventory`),
-  getReservations: (params: import('@/types/api').ReservationsQueryParams) => {
-    const qs = new URLSearchParams(
-      Object.entries(params)
-        .filter(([, v]) => v !== undefined && v !== null)
-        .map(([k, v]) => [k, String(v)]) as [string, string][],
-    )
-    return http<import('@/types/api').GetReservationsResponseWire>(`/reservations?${qs}`)
+  postOrders: async (count: number) => {
+    const { data } = await lunchApi.post<{ accepted: boolean; count: number }>(
+      `/orders`,
+      { count }
+    );
+    return data;
   },
-  getReservationDetail: (plateId: string) =>
-    http<import('@/types/api').GetReservationDetailResponseWire>(`/reservations/${plateId}`),
-  getPurchases: (params: import('@/types/api').PurchasesQueryParams) => {
-    const qs = new URLSearchParams(
-      Object.entries(params)
-        .filter(([, v]) => v !== undefined && v !== null)
-        .map(([k, v]) => [k, String(v)]) as [string, string][],
-    )
-    return http<import('@/types/api').GetPurchasesResponseWire>(`/purchases?${qs}`)
-  },
-  getStatsSummary: () => http<import('@/types/api').GetStatsSummaryResponse>(`/stats/summary`),
-}
 
-export type ApiClient = typeof api
+  getRecipes: async () =>
+    (await lunchApi.get<GetRecipesResponse>(`/recipes`)).data,
+
+  getInventory: async () =>
+    (await lunchApi.get<GetInventoryResponse>(`/inventory`)).data,
+
+  getReservations: async (params: ReservationsQueryParams) => {
+    const { data } = await lunchApi.get<GetReservationsResponseWire>(
+      `/reservations`,
+      { params }
+    );
+    return data;
+  },
+
+  getReservationDetail: async (plateId: string) =>
+    (
+      await lunchApi.get<GetReservationDetailResponseWire>(
+        `/reservations/${plateId}`
+      )
+    ).data,
+
+  getPurchases: async (params: PurchasesQueryParams) =>
+    (await lunchApi.get<GetPurchasesResponseWire>(`/purchases`, { params }))
+      .data,
+
+  getStatsSummary: async () =>
+    (await lunchApi.get<GetStatsSummaryResponse>(`/stats/summary`)).data,
+
+  getStatsTimings: async () =>
+    (
+      await lunchApi.get<{
+        avgSeconds: number;
+        p95Seconds: number;
+        count: number;
+      }>(`/stats/timings`)
+    ).data,
+
+  getStatsPurchases: async () =>
+    (
+      await lunchApi.get<
+        Array<{
+          ingredient: string;
+          attempts: number;
+          requested: number;
+          sold: number;
+          lastAt: string;
+        }>
+      >("/stats/purchases")
+    ).data,
+};
+
+export type ApiClient = typeof api;

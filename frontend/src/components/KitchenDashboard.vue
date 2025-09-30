@@ -48,22 +48,24 @@
                 class="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
-            <Button
-              class="px-6 py-3 cursor-pointer"
-              :disabled="
-                isProcessing || !orderQuantityNum || orderQuantityNum <= 0
-              "
-              @click="handleStartOrders"
-              >{{
-                isProcessing ? "Procesando..." : "Iniciar Preparación"
-              }}</Button
-            >
+            <div class="flex gap-2 flex-wrap">
+              <Button
+                class="px-6 py-3 cursor-pointer"
+                :disabled="
+                  isProcessing || !orderQuantityNum || orderQuantityNum <= 0
+                "
+                @click="handleStartOrders"
+                >{{
+                  isProcessing ? "Procesando..." : "Iniciar Preparación"
+                }}</Button
+              >
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 my-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-4">
         <Card
           class="bg-white border rounded-xl shadow-sm p-5 hover:shadow-md hover:scale-110 scale-100 transition"
         >
@@ -101,6 +103,22 @@
             {{ stats.platesInProgress.toLocaleString() }}
           </div>
           <p class="text-xs text-gray-500">Cocinando ahora</p>
+        </Card>
+
+        <Card
+          class="bg-white border rounded-xl shadow-sm p-5 hover:shadow-md transition hover:scale-110 scale-100"
+        >
+          <CardHeader class="flex items-center justify-between">
+            <CardTitle class="text-sm font-medium">Tiempo Promedio</CardTitle>
+            <div>⏱️</div>
+          </CardHeader>
+          <div class="text-2xl font-bold text-emerald-600 mt-2">
+            {{ avgFmt }}
+          </div>
+          <p class="text-xs text-gray-500">
+            p95: {{ p95Fmt }}
+            <span v-if="timingsCount">• n={{ timingsCount }}</span>
+          </p>
         </Card>
       </div>
 
@@ -141,14 +159,16 @@
                 </Badge>
               </div>
             </div>
-        </CardContent>
+          </CardContent>
         </Card>
 
         <!-- Ordenes -->
         <Card class="rounded-xl shadow-sm">
           <CardHeader class="p-5">
             <CardTitle class="font-semibold">Órdenes Recientes</CardTitle>
-            <CardDescription class="text-sm text-gray-500">Últimas 10 órdenes procesadas</CardDescription>
+            <CardDescription class="text-sm text-gray-500"
+              >Últimas 10 órdenes procesadas</CardDescription
+            >
           </CardHeader>
 
           <CardContent class="p-5">
@@ -164,8 +184,9 @@
                 v-for="order in recentOrders"
                 :key="order.id"
                 class="flex items-center justify-between p-3 bg-white rounded-lg border hover:shadow-md transition"
+                @click="openOrder(order.id)"
               >
-                <div class="flex-1">
+                <div class="flex-1 cursor-pointer">
                   <p class="font-medium text-sm">
                     Orden #{{ order.id.split("-")[1] }}
                   </p>
@@ -174,22 +195,25 @@
                   </p>
                 </div>
                 <Badge
-                  class="px-2 py-1 rounded text-xs font-bold"
+                  class="px-2 py-1 rounded text-xs font-bold cursor-pointer"
                   :class="badgeClass(order.status)"
                 >
                   {{ statusText(order.status) }}
                 </Badge>
               </div>
+
+              <OrderDetailDrawer
+                :open="detailOpen"
+                :plateId="selectedOrderId"
+                @update:open="detailOpen = $event"
+              />
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- Stats -->
-      <Card
-        v-if="stats.totalPlatesOrdered > 0"
-        class="shadow-sm w-full my-4"
-      >
+      <Card v-if="stats.totalPlatesOrdered > 0" class="shadow-sm w-full my-4">
         <CardHeader class="p-5 border-b">
           <CardTitle class="font-semibold">Estadísticas Detalladas</CardTitle>
         </CardHeader>
@@ -238,9 +262,21 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Badge } from "./ui/badge";
+import OrderDetailDrawer from "./OrderDetailDrawer.vue";
 
-const { orders, stats, inventory, isProcessing, startOrders } =
-  useKitchenSystem();
+const {
+  orders,
+  stats,
+  inventory,
+  isProcessing,
+  startOrders,
+  avgSeconds,
+  p95Seconds,
+  timingsCount,
+} = useKitchenSystem();
+
+const avgFmt = computed(() => `${avgSeconds.value.toFixed(1)}s`);
+const p95Fmt = computed(() => `${p95Seconds.value.toFixed(1)}s`);
 
 const orderQuantity = ref<string>("10");
 const orderQuantityNum = computed(() =>
@@ -248,6 +284,14 @@ const orderQuantityNum = computed(() =>
 );
 
 const recentOrders = computed(() => orders.value.slice(-10));
+
+const selectedOrderId = ref<string | null>(null);
+const detailOpen = ref(false);
+
+function openOrder(orderId: string) {
+  selectedOrderId.value = orderId;
+  detailOpen.value = true;
+}
 
 function handleStartOrders() {
   const quantity = orderQuantityNum.value;
