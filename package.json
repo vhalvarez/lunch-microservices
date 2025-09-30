@@ -16,30 +16,9 @@
     "dev:all": "concurrently \"npm run dev:microservices\" \"npm run dev:frontend\"",
     
     "prod:up": "cd microservices/infra && docker-compose -f docker-compose.prod.yml up -d --build",
-    "prod:down": "cd microservices/infra && docker-compose -f docker-compose.prod.yml down",
-    "prod:build": "cd microservices/infra && docker-compose -f docker-compose.prod.yml build",
-    "prod:rebuild": "cd microservices/infra && docker-compose -f docker-compose.prod.yml build --no-cache",
-    "prod:logs": "cd microservices/infra && docker-compose -f docker-compose.prod.yml logs -f",
-    "prod:restart": "npm run prod:down && npm run prod:up",
     
     "docker:clean": "docker system prune -f && docker volume prune -f",
-    "docker:clean:all": "docker system prune -a -f && docker volume prune -f",
-    
-    "build:microservices": "cd microservices && pnpm run build",
-    "build:frontend": "cd frontend && pnpm run build",
-    "build:all": "npm run build:microservices && npm run build:frontend",
-    
-    "test:microservices": "cd microservices && pnpm test",
-    "test:frontend": "cd frontend && pnpm test",
-    "test:all": "npm run test:microservices && npm run test:frontend",
-    
-    "lint:microservices": "cd microservices && pnpm run lint",
-    "lint:frontend": "cd frontend && pnpm run lint",
-    "lint:all": "npm run lint:microservices && npm run lint:frontend",
-    
-    "clean:microservices": "cd microservices && rimraf node_modules pnpm-lock.yaml",
-    "clean:frontend": "cd frontend && rimraf node_modules pnpm-lock.yaml",
-    "clean:all": "npm run clean:microservices && npm run clean:frontend"
+    "docker:clean:all": "docker system prune -a -f && docker volume prune -f"
   },
   "workspaces": [
     "microservices",

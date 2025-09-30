@@ -259,10 +259,10 @@ async function main() {
   app.get('/stats/purchases', async () => {
     const { rows } = await pool.query<{
       ingredient: string;
-      attempts: string; 
-      requested: string; 
+      attempts: string;
+      requested: string;
       sold: string;
-      last_at: string; 
+      last_at: string;
     }>(
       `select ingredient,
               count(*)::bigint as attempts,
@@ -274,17 +274,38 @@ async function main() {
         order by ingredient`,
     );
 
-
-    return rows.map((r: PurchaseStatsRow): PurchaseStats => ({
-      ingredient: r.ingredient,
-      attempts: Number(r.attempts),
-      requested: Number(r.requested),
-      sold: Number(r.sold),
-      lastAt: r.last_at,
-    }));
+    return rows.map(
+      (r: PurchaseStatsRow): PurchaseStats => ({
+        ingredient: r.ingredient,
+        attempts: Number(r.attempts),
+        requested: Number(r.requested),
+        sold: Number(r.sold),
+        lastAt: r.last_at,
+      }),
+    );
   });
 
-  // Start + graceful shutdown
+  app.get('/stats/timings', async () => {
+    const { rows } = await pool.query<{ avg_s: string; p95_s: string; count: string }>(`
+        with d as (
+          select extract(epoch from (prepared_at - created_at)) as sec
+          from reservations
+          where prepared_at is not null
+        )
+        select avg(sec)::float as avg_s,
+              percentile_cont(0.95) within group (order by sec)::float as p95_s,
+              count(*)::bigint as count
+        from d
+      `);
+    const r = rows[0] ?? { avg_s: null, p95_s: null, count: 0 };
+    return {
+      avgSeconds: Number(r.avg_s ?? 0),
+      p95Seconds: Number(r.p95_s ?? 0),
+      count: Number(r.count ?? 0),
+    };
+  });
+
+  // Start + shutdown
   const close = async () => {
     try {
       await bus.close?.();

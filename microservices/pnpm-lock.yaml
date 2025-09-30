@@ -66,9 +66,6 @@ importers:
       '@lunch/recipes':
         specifier: workspace:*
         version: link:../../packages/recipes
-      '@lunch/recommender-ai':
-        specifier: workspace:*
-        version: link:../../packages/recommender-ai
       '@lunch/shared-kernel':
         specifier: workspace:*
         version: link:../../packages/shared-kernel
@@ -106,6 +103,9 @@ importers:
       '@lunch/messaging':
         specifier: workspace:*
         version: link:../../packages/messaging
+      '@lunch/recipes':
+        specifier: workspace:*
+        version: link:../../packages/recipes
       '@lunch/redis':
         specifier: workspace:*
         version: link:../../packages/redis
@@ -161,6 +161,9 @@ importers:
       '@lunch/messaging':
         specifier: workspace:*
         version: link:../../packages/messaging
+      '@lunch/recipes':
+        specifier: workspace:*
+        version: link:../../packages/recipes
       '@lunch/redis':
         specifier: workspace:*
         version: link:../../packages/redis
@@ -195,6 +198,9 @@ importers:
       '@lunch/messaging':
         specifier: workspace:*
         version: link:../../packages/messaging
+      '@lunch/recipes':
+        specifier: workspace:*
+        version: link:../../packages/recipes
       '@lunch/redis':
         specifier: workspace:*
         version: link:../../packages/redis
@@ -352,25 +358,6 @@ importers:
         version: 4.20.6
       typescript:
         specifier: 5.9.x
-        version: 5.9.2
-
-  packages/recommender-ai:
-    dependencies:
-      '@lunch/recipes':
-        specifier: workspace:*
-        version: link:../recipes
-      '@lunch/shared-kernel':
-        specifier: workspace:*
-        version: link:../shared-kernel
-    devDependencies:
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.0.1
-      tsx:
-        specifier: ^4.20.6
-        version: 4.20.6
-      typescript:
-        specifier: ^5.9.2
         version: 5.9.2
 
   packages/redis:

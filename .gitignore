@@ -97,3 +97,5 @@ temp/
 /microservices/apps/*/build
 /microservices/packages/*/dist
 /microservices/packages/*/build
+
+docs/
