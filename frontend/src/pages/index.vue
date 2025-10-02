@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import KitchenDashboard from '@/components/KitchenDashboard.vue';
+import KitchenDashboard from '@/widgets/KitchenDashboard.vue';
 </script>
 
 <template>
-    <KitchenDashboard />
+  <KitchenDashboard />
 </template>
