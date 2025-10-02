@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+**/.turbo
+**/.next
+**/.nuxt
+**/dist
+**/build
+**/.cache
+.git
+**/.DS_Store

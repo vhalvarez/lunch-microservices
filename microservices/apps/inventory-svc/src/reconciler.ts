@@ -43,6 +43,7 @@ export async function runReconcilerOnce(pg: Pool, bus: Bus, redis: Redis) {
         AND retry_count < $1
       ORDER BY last_retry_at NULLS FIRST
       LIMIT $2
+      FOR UPDATE SKIP LOCKED
       `,
       [env.RECONCILER_MAX_RETRIES, env.RECONCILER_BATCH_LIMIT],
     );
@@ -106,6 +107,11 @@ export async function runReconcilerOnce(pg: Pool, bus: Bus, redis: Redis) {
             items,
           } satisfies InventoryReserved);
         } else {
+          // Marcar como 'purchasing' para evitar reintentos duplicados
+          await pg.query(`UPDATE reservations SET status='purchasing' WHERE plate_id=$1`, [
+            plateId,
+          ]);
+
           await pg.query('COMMIT');
 
           await bus.publish(Exchanges.purchase, RoutingKeys.purchaseRequested, {

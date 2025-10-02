@@ -10,7 +10,7 @@ WORKDIR /repo
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 
-RUN mkdir -p packages/bus packages/config packages/db packages/logger packages/messaging packages/recipes packages/redis packages/shared-kernel packages/utils
+RUN mkdir -p packages/bus packages/config packages/db packages/logger packages/messaging packages/recipes packages/redis packages/shared-kernel packages/utils packages/recommender-ai
 COPY packages/bus/package.json ./packages/bus/
 COPY packages/config/package.json ./packages/config/
 COPY packages/db/package.json ./packages/db/
@@ -20,6 +20,7 @@ COPY packages/recipes/package.json ./packages/recipes/
 COPY packages/redis/package.json ./packages/redis/
 COPY packages/shared-kernel/package.json ./packages/shared-kernel/
 COPY packages/utils/package.json ./packages/utils/
+COPY packages/recommender-ai/package.json ./packages/recommender-ai/
 COPY apps/bff/package.json ./apps/bff/
 
 RUN pnpm -w install

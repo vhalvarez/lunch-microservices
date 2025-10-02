@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { Ingredient, Item as ItemSchema, type Item } from '@lunch/shared-kernel';
 
-/** Tipo de receta reutilizable en BFF y order-svc */
 export type Recipe = {
   name: string;
   items: Item[];
@@ -12,7 +11,6 @@ export const RecipeSchema = z.object({
   items: z.array(ItemSchema).min(1),
 });
 
-/** Catálogo de recetas */
 export const RECIPES: readonly Recipe[] = [
   {
     name: 'Chicken Rice',

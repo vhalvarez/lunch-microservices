@@ -2,14 +2,14 @@ import { randomUUID } from 'crypto';
 import { env } from '@lunch/config';
 import { Bus } from '@lunch/messaging';
 import { createLogger } from '@lunch/logger';
-import { createPool } from '@lunch/db';
+import { getDbPool } from '@lunch/db';
 import { createRedis, withIdempotency } from '@lunch/redis';
 import { jitter, sleep } from '@lunch/utils';
 import { Exchanges, RoutingKeys, InventoryReserved } from '@lunch/shared-kernel';
 import type { PlatePrepared } from '@lunch/shared-kernel';
 
 const log = createLogger('kitchen-svc');
-const pool = createPool(env.DATABASE_URL);
+const pool = getDbPool('kitchen-svc');
 const redis = createRedis(env.REDIS_URL);
 
 async function main() {
@@ -54,6 +54,13 @@ async function main() {
         };
 
         await bus.publish(Exchanges.plate, RoutingKeys.platePrepared, payload);
+        
+        await bus.publish(Exchanges.order, RoutingKeys.orderCompleted, {
+          messageId: randomUUID(),
+          plateId: e.plateId,
+          preparedAt: new Date(preparedAt).toISOString(),
+        });
+        
         log.info({ plateId: e.plateId }, 'plate prepared');
       });
     },

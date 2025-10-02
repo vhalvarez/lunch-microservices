@@ -23,3 +23,5 @@ export async function withTx<T>(pool: pg.Pool, fn: (cx: pg.PoolClient) => Promis
 }
 
 export type { Pool, PoolClient } from 'pg';
+
+export { getDatabase, getDbPool, closeDatabase, closeAllDatabases } from './singleton.js';

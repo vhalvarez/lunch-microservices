@@ -1,0 +1,46 @@
+###########
+# Builder #
+###########
+FROM node:20-alpine AS builder
+ENV PNPM_HOME=/root/.local/share/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+
+WORKDIR /repo
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+
+RUN mkdir -p packages/bus packages/config packages/db packages/logger packages/messaging packages/recipes packages/redis packages/shared-kernel packages/utils packages/recommender-ai
+COPY packages/bus/package.json ./packages/bus/
+COPY packages/config/package.json ./packages/config/
+COPY packages/db/package.json ./packages/db/
+COPY packages/logger/package.json ./packages/logger/
+COPY packages/messaging/package.json ./packages/messaging/
+COPY packages/recipes/package.json ./packages/recipes/
+COPY packages/redis/package.json ./packages/redis/
+COPY packages/shared-kernel/package.json ./packages/shared-kernel/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/recommender-ai/package.json ./packages/recommender-ai/
+COPY apps/predictor-svc/package.json ./apps/predictor-svc/
+
+RUN pnpm -w install
+RUN pnpm install
+
+COPY packages ./packages
+COPY apps/predictor-svc ./apps/predictor-svc
+
+RUN pnpm run build:shared
+RUN pnpm -F predictor-svc run build
+
+RUN pnpm deploy --legacy --filter predictor-svc --prod /opt/app
+
+##########
+# Runner #
+##########
+FROM node:20-alpine AS runner
+ENV NODE_ENV=production
+WORKDIR /app
+
+COPY --from=builder /opt/app ./
+
+CMD ["node", "dist/index.js"]

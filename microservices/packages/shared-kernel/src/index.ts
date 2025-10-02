@@ -108,7 +108,7 @@ export const OrderCreateRequested = z.object({
 export type OrderCreateRequested = z.infer<typeof OrderCreateRequested>;
 
 export const ReservationsQuery = z.object({
-  status: z.enum(['pending', 'reserved', 'failed']).optional(),
+  status: z.enum(['pending', 'purchasing', 'reserved', 'failed']).optional(),
   prepared: z.coerce.boolean().optional(),
   plateId: z.uuid().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
@@ -149,9 +149,11 @@ export const RoutingKeys = {
   inventoryReserveRequested: 'inventory.reserve.requested',
   inventoryReserved: 'inventory.reserved',
   inventoryFailed: 'inventory.failed',
+  stockLow: 'inventory.stock.low',
   plateRequested: 'plate.requested',
   platePrepared: 'plate.prepared',
   orderCreateRequested: 'order.create.requested',
+  orderCompleted: 'order.completed',
 } as const;
 
 export const Requirement = z.object({

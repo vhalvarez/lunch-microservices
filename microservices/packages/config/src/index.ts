@@ -34,6 +34,20 @@ const EnvSchema = z.object({
   // order-svc / BFF
   ORDER_BATCH_SIZE: z.coerce.number().int().min(1).default(100),
   BFF_PORT: z.coerce.number().int().min(1).default(4000),
+  BFF_PREFIX: z.string().default('/api/v1'),
+
+  // predictor-svc · AI Predictions
+  ANALYSIS_WINDOW_HOURS: z.coerce.number().int().min(1).default(1),
+  MIN_ORDERS_BATCH: z.coerce.number().int().min(1).default(10),
+  DEBOUNCE_MS: z.coerce.number().int().min(1000).default(5000),
+  FORCE_ANALYSIS_INTERVAL_MS: z.coerce.number().int().min(10000).default(60000),
+  CLEANUP_INTERVAL_MS: z.coerce.number().int().min(60000).default(3_600_000),
+  KEEP_PREDICTIONS_COUNT: z.coerce.number().int().min(10).default(100),
+
+  // AI Provider: Groq (GRATIS - RECOMENDADO)
+  GROQ_ENABLED: z.coerce.boolean().default(false),
+  GROQ_API_KEY: z.string().optional(),
+  GROQ_MODEL: z.string().default('llama3-70b-8192'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

@@ -50,6 +50,21 @@ services:
       timeout: 3s
       retries: 20
 
+  db-migrate:
+    build:
+      context: ..
+      dockerfile: infra/migrations/Dockerfile
+    container_name: lunch-migrate
+    restart: "no"
+    env_file:
+      - ../.env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lunchday}}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   # ----------------- App services -----------------
 
   order-svc:
@@ -67,9 +82,14 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       ORDER_BATCH_SIZE: ${ORDER_BATCH_SIZE:-100}
     depends_on:
-      - rabbitmq
-      - postgres
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
 
   inventory-svc:
     build:
@@ -86,9 +106,14 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       RMQ_PREFETCH: ${RMQ_PREFETCH:-200}
     depends_on:
-      - rabbitmq
-      - postgres
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
   
   market-adapter-svc:
     build:
@@ -108,9 +133,14 @@ services:
       MARKET_CONCURRENCY: ${MARKET_CONCURRENCY:-128}
       MARKET_HTTP_CONN: ${MARKET_HTTP_CONN:-64}
     depends_on:
-      - rabbitmq
-      - postgres
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
   
   kitchen-svc:
     build:
@@ -126,9 +156,43 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lunchday}}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     depends_on:
-      - rabbitmq
-      - postgres
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+  predictor-svc:
+    build:
+      context: ..
+      dockerfile: apps/predictor-svc/Dockerfile
+    container_name: lunch-predictor
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      NODE_ENV: production
+      AMQP_URL: ${AMQP_URL:-amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672}
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lunchday}}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      RMQ_PREFETCH: ${RMQ_PREFETCH:-200}
+      ANALYSIS_WINDOW_HOURS: ${ANALYSIS_WINDOW_HOURS:-1}
+      MIN_ORDERS_BATCH: ${MIN_ORDERS_BATCH:-10}
+      DEBOUNCE_MS: ${DEBOUNCE_MS:-5000}
+      FORCE_ANALYSIS_INTERVAL_MS: ${FORCE_ANALYSIS_INTERVAL_MS:-60000}
+      CLEANUP_INTERVAL_MS: ${CLEANUP_INTERVAL_MS:-3600000}
+      KEEP_PREDICTIONS_COUNT: ${KEEP_PREDICTIONS_COUNT:-100}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
   
   bff:
     build:
@@ -147,9 +211,14 @@ services:
     ports:
       - "${BFF_PORT:-4000}:4000"
     depends_on:
-      - rabbitmq
-      - postgres
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
 
 volumes:
   pg_data:

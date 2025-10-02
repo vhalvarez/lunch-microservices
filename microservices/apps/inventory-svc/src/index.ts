@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { env } from '@lunch/config';
 import { createLogger } from '@lunch/logger';
-import { createPool, withTx } from '@lunch/db';
+import { getDbPool, withTx } from '@lunch/db';
 import { createRedis, withIdempotency } from '@lunch/redis';
 import { createBus } from '@lunch/bus';
 import {
@@ -17,14 +17,13 @@ import {
 import { startReconciler } from './reconciler.js';
 
 const log = createLogger('inventory-svc');
-const pool = createPool(env.DATABASE_URL);
+const pool = getDbPool('inventory-svc');
 const redis = createRedis(env.REDIS_URL);
 
 async function main() {
   const bus = createBus(env.AMQP_URL, env.RMQ_PREFETCH);
   await bus.connect();
 
-  // inventory.reserve.requested
   await bus.subscribe(
     'inventory.reserve.requested.q',
     [{ exchange: Exchanges.inventory, rk: RoutingKeys.inventoryReserveRequested }],
@@ -37,7 +36,7 @@ async function main() {
       const e = parsed.data;
 
       await withIdempotency(redis, e.messageId, 60 * 60, async () => {
-        const { shortages } = await withTx(pool, async (cx) => {
+        const { shortages, shouldPurchase } = await withTx(pool, async (cx) => {
           await cx.query(
             `insert into reservations(plate_id, status)
              values ($1,'pending')
@@ -95,11 +94,19 @@ async function main() {
               e.plateId,
               'reserved',
             ]);
+            return { shortages, shouldPurchase: false };
+          } else {
+            // Marcar como 'purchasing' para evitar reintentos del reconciliador
+            await cx.query('update reservations set status=$2 where plate_id=$1', [
+              e.plateId,
+              'purchasing',
+            ]);
+            return { shortages, shouldPurchase: true };
           }
-          return { shortages };
         });
 
-        if (shortages.length > 0) {
+        // Publicar eventos FUERA de la transacción
+        if (shouldPurchase) {
           await bus.publish(Exchanges.purchase, RoutingKeys.purchaseRequested, {
             messageId: randomUUID(),
             plateId: e.plateId,
@@ -116,7 +123,6 @@ async function main() {
     },
   );
 
-  // purchase.completed
   await bus.subscribe(
     'purchase.completed.to.inventory.q',
     [{ exchange: Exchanges.purchase, rk: RoutingKeys.purchaseCompleted }],
@@ -169,7 +175,7 @@ async function main() {
               );
             }
             if (reserveNow < need) {
-              allOk = false; // aún falta para este ingrediente
+              allOk = false; 
             }
           }
 
@@ -190,6 +196,11 @@ async function main() {
               qty: Number(r.reserved),
             }));
             return { allOk, itemsPub };
+          } else {
+            await cx.query('update reservations set status=$2 where plate_id=$1', [
+              e.plateId,
+              'pending',
+            ]);
           }
 
           return { allOk, itemsPub: [] as Array<{ ingredient: Ingredient; qty: number }> };
@@ -202,13 +213,15 @@ async function main() {
             items: txOut.itemsPub,
           } satisfies InventoryReserved);
         } else {
-          log.info({ plateId: e.plateId }, 'reservation still pending after purchase.completed');
+          log.info(
+            { plateId: e.plateId },
+            'reservation incomplete after purchase.completed, returned to pending for reconciler',
+          );
         }
       });
     },
   );
 
-  // purchase.failed
   await bus.subscribe(
     'purchase.failed.to.inventory.q',
     [{ exchange: Exchanges.purchase, rk: RoutingKeys.purchaseFailed }],
@@ -234,9 +247,13 @@ async function main() {
           if (rows.length > 0) {
             await cx.query(
               `update reservations
-                  set status = 'failed'
+                  set status = 'pending'
                 where plate_id = $1`,
               [e.plateId],
+            );
+            log.warn(
+              { plateId: e.plateId },
+              'purchase failed, reservation returned to pending for retry',
             );
           }
         });
@@ -244,7 +261,6 @@ async function main() {
     },
   );
 
-  // reintentos para pending
   startReconciler(pool as any, bus, redis);
 
   log.info('inventory-svc up');

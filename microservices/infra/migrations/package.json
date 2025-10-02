@@ -1,0 +1,24 @@
+{
+  "name": "migrations",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "migrate": "tsx index.ts up",
+    "migrate:up": "tsx index.ts up",
+    "migrate:down": "tsx index.ts down",
+    "migrate:status": "tsx index.ts status",
+    "migrate:rollback": "tsx index.ts rollback",
+    "build:shared": "pnpm -F @lunch/shared-kernel build && pnpm -F @lunch/messaging build && pnpm -F @lunch/config build && pnpm -F @lunch/logger build && pnpm -F @lunch/db build && pnpm -F @lunch/redis build && pnpm -F @lunch/utils build && pnpm -F @lunch/bus build && pnpm -F @lunch/recipes build && pnpm -F @lunch/recommender-ai build"
+  },
+  "dependencies": {
+    "@lunch/config": "workspace:*",
+    "@lunch/db": "workspace:*",
+    "@lunch/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  }
+}

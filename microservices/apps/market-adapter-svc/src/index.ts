@@ -2,13 +2,13 @@ import { randomUUID } from 'crypto';
 import { request } from 'undici';
 import { env } from '@lunch/config';
 import { createLogger } from '@lunch/logger';
-import { createPool } from '@lunch/db';
+import { getDbPool, closeDatabase } from '@lunch/db';
 import { createBus } from '@lunch/bus';
 import { Exchanges, RoutingKeys, PurchaseRequested, PurchaseCompleted } from '@lunch/shared-kernel';
 import { jitter, sleep } from '@lunch/utils';
 
 const log = createLogger('market-adapter');
-const pg = createPool(env.DATABASE_URL);
+const pg = getDbPool('market-adapter-svc');
 
 async function buyOnce(ingredient: string): Promise<number> {
   const url = `${env.MARKET_URL}/buy?ingredient=${encodeURIComponent(ingredient)}`;
@@ -120,7 +120,7 @@ async function main() {
 
   const shutdown = async () => {
     try {
-      await pg.end();
+      await closeDatabase('market-adapter-svc');
     } catch {}
     try {
       await (bus as any).close?.();
