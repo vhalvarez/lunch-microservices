@@ -50,6 +50,7 @@ const EnvSchema = z.object({
   GROQ_MODEL: z.string().default('llama3-70b-8192'),
 });
 
+export { EnvSchema };
 export type Env = z.infer<typeof EnvSchema>;
 export const env: Env = EnvSchema.parse(process.env);
 
