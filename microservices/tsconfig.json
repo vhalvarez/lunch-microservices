@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@lunch/shared-kernel": ["./packages/shared-kernel/src"],
+      "@lunch/messaging": ["./packages/messaging/src"],
+      "@lunch/config": ["./packages/config/src"],
+      "@lunch/logger": ["./packages/logger/src"],
+      "@lunch/db": ["./packages/db/src"],
+      "@lunch/redis": ["./packages/redis/src"],
+      "@lunch/utils": ["./packages/utils/src"],
+      "@lunch/recipes": ["./packages/recipes/src"],
+      "@lunch/recommender-ai": ["./packages/recommender-ai/src"],
+      "@lunch/bus": ["./packages/bus/src"]
+    }
+  },
+  "include": [
+    "tests/**/*",
+    "packages/*/src/**/*",
+    "apps/*/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/*.spec.ts"
+  ]
+}
