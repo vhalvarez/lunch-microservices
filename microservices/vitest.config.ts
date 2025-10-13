@@ -29,6 +29,13 @@ export default defineConfig({
       '@lunch/shared-kernel': resolve(__dirname, './packages/shared-kernel/src'),
       '@lunch/messaging': resolve(__dirname, './packages/messaging/src'),
       '@lunch/config': resolve(__dirname, './packages/config/src'),
+      '@lunch/logger': resolve(__dirname, './packages/logger/src'),
+      '@lunch/db': resolve(__dirname, './packages/db/src'),
+      '@lunch/redis': resolve(__dirname, './packages/redis/src'),
+      '@lunch/utils': resolve(__dirname, './packages/utils/src'),
+      '@lunch/recipes': resolve(__dirname, './packages/recipes/src'),
+      '@lunch/recommender-ai': resolve(__dirname, './packages/recommender-ai/src'),
+      '@lunch/bus': resolve(__dirname, './packages/bus/src'),
     },
   },
 });

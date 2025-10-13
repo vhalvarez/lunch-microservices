@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 
@@ -11,6 +12,12 @@ export interface MicroserviceConfig {
 
 export class MicroserviceManager extends EventEmitter {
   private processes: Map<string, ChildProcess> = new Map();
+
+  constructor() {
+    super();
+    // Aumentar límite para múltiples servicios
+    (this as EventEmitter).setMaxListeners(20);
+  }
 
   async start(config: MicroserviceConfig): Promise<void> {
     console.log(`🚀 Starting ${config.name}...`);
