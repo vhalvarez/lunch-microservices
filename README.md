@@ -10,11 +10,7 @@
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-<div align="center">
-  <img src="kitchen-dashboard.gif" alt="Dashboard Demo" width="100%" />
-</div>
 
-<br/>
 
 Sistema completo de gestión automatizada para eventos masivos de donación de comida, con análisis predictivo impulsado por IA.
 
