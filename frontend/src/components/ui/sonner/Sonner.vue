@@ -40,6 +40,7 @@ import { Toaster as Sonner } from "vue-sonner"
   font-family: ui-sans-serif, system-ui, sans-serif !important;
   min-width: 300px !important;
   max-width: 400px !important;
+  padding: 1.5rem !important;
 }
 
 :global([data-sonner-toast][data-type="success"]) {

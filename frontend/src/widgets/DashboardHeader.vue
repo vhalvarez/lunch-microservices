@@ -1,12 +1,18 @@
 <template>
-  <div class="max-w-4xl mx-auto space-y-6">
-    <div class="text-center space-y-4">
-      <div class="flex items-center justify-center gap-2">
-        <h1 class="text-4xl font-bold">Sistema de Cocina Inteligente</h1>
-      </div>
-      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Gestión automatizada para la jornada de donación masiva.
+  <div class="flex items-center justify-between">
+    <div class="space-y-1">
+      <h1 class="text-2xl font-bold tracking-tight">Sistema de Cocina</h1>
+      <p class="text-sm text-muted-foreground">
+        Gestión automatizada para la jornada de donación.
       </p>
+    </div>
+    <!-- Placeholder for extra actions like User Profile or Settings -->
+    <div class="flex items-center gap-4">
+      <div
+        class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"
+      >
+        L
+      </div>
     </div>
   </div>
 </template>

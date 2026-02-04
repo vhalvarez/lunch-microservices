@@ -7,9 +7,8 @@ export function useOrders() {
   const queryClient = useQueryClient();
 
   const ordersQuery = useQuery({
-    queryKey: ['orders', { limit: 10, offset: 0 }],
-    queryFn: () => ordersApi.getAll({ limit: 10, offset: 0 }),
-    refetchInterval: 1000,
+    queryKey: ['orders', { limit: 200, offset: 0 }],
+    queryFn: () => ordersApi.getAll({ limit: 200, offset: 0 }),
   });
 
   const createMutation = useMutation({
@@ -22,8 +21,20 @@ export function useOrders() {
       queryClient.invalidateQueries({ queryKey: ['kitchen'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
-    onError: (err: unknown) => {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
+    onError: (err: any) => {
+      let message = 'Error desconocido';
+
+      // Intentar extraer mensaje amigable de Zod/Backend
+      if (err.apiData?.error && Array.isArray(err.apiData.error)) {
+        // Formato Zod: [{"message": "...", "path": [...]}]
+        message = err.apiData.error.map((e: any) => e.message).join(', ');
+      } else if (err.apiData?.message) {
+        // Formato estándar { message: "..." }
+        message = err.apiData.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+
       toast.error('Error al crear órdenes', {
         description: message,
       });
@@ -31,7 +42,7 @@ export function useOrders() {
   });
 
   return {
-    orders: computed(() => ordersQuery.data?.value ?? []),
+    orders: computed(() => ordersQuery.data?.value?.data ?? []),
     isLoading: computed(() => ordersQuery.isLoading.value),
     createOrders: (count: number) => createMutation.mutate(count),
     isCreating: computed(() => createMutation.isPending.value),

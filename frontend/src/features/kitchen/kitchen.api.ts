@@ -25,6 +25,17 @@ interface StatsPurchasesResponse {
   lastAt: string;
 }
 
+export interface TrafficStat {
+  hour: string;
+  count: number;
+}
+
+export interface EfficiencyStat {
+  flowEfficiency: number;
+  avgPrepTime: number;
+  turnRate: number;
+}
+
 export const kitchenApi = {
   async getStats(): Promise<KitchenStats> {
     const [summaryRes, purchasesRes] = await Promise.all([
@@ -49,6 +60,21 @@ export const kitchenApi = {
 
   async getTimings(): Promise<StatsTimingsResponse> {
     const { data } = await http.get<StatsTimingsResponse>('/stats/timings');
+    return data;
+  },
+
+  async getMarketLogs(): Promise<any[]> {
+    const { data } = await http.get<any[]>('/stats/market-logs');
+    return data;
+  },
+
+  async getTrafficStats(): Promise<TrafficStat[]> {
+    const { data } = await http.get<TrafficStat[]>('/stats/traffic');
+    return data;
+  },
+
+  async getEfficiencyStats(): Promise<EfficiencyStat> {
+    const { data } = await http.get<EfficiencyStat>('/stats/efficiency');
     return data;
   },
 };

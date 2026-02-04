@@ -6,7 +6,6 @@ export function useInventory() {
   const inventoryQuery = useQuery({
     queryKey: ['inventory'],
     queryFn: inventoryApi.getAll,
-    refetchInterval: 1000,
   });
 
   return {

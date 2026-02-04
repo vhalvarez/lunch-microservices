@@ -27,6 +27,7 @@ export type Item = z.infer<typeof Item>;
 export const PurchaseRequested = z
   .object({
     messageId: z.uuid(),
+    correlationId: z.uuid().optional(),
     plateId: z.uuid(),
     shortages: z
       .array(
@@ -43,6 +44,7 @@ export type PurchaseRequested = z.infer<typeof PurchaseRequested>;
 export const PurchaseCompleted = z
   .object({
     messageId: z.uuid(),
+    correlationId: z.uuid().optional(),
     plateId: z.uuid(),
     purchased: z
       .array(
@@ -59,6 +61,7 @@ export type PurchaseCompleted = z.infer<typeof PurchaseCompleted>;
 export const PurchaseFailed = z
   .object({
     messageId: z.uuid(),
+    correlationId: z.uuid().optional(),
     plateId: z.uuid(),
     reason: z.string().min(1).default('unavailable'),
   })
@@ -68,6 +71,7 @@ export type PurchaseFailed = z.infer<typeof PurchaseFailed>;
 export const InventoryReserveRequested = z
   .object({
     messageId: z.uuid(),
+    correlationId: z.uuid().optional(),
     plateId: z.uuid(),
     items: z.array(Item).min(1),
   })
@@ -77,6 +81,7 @@ export type InventoryReserveRequested = z.infer<typeof InventoryReserveRequested
 export const InventoryReserved = z
   .object({
     messageId: z.uuid(),
+    correlationId: z.uuid().optional(),
     plateId: z.uuid(),
     items: z.array(Item).min(1),
   })
@@ -86,6 +91,7 @@ export type InventoryReserved = z.infer<typeof InventoryReserved>;
 export const InventoryFailed = z
   .object({
     messageId: z.uuid(),
+    correlationId: z.uuid().optional(),
     plateId: z.uuid(),
     reason: z.string().min(1),
   })
@@ -95,6 +101,7 @@ export type InventoryFailed = z.infer<typeof InventoryFailed>;
 export const PlatePrepared = z
   .object({
     messageId: z.uuid(),
+    correlationId: z.uuid().optional(),
     plateId: z.uuid(),
     preparedAt: z.string(),
   })
@@ -103,6 +110,7 @@ export type PlatePrepared = z.infer<typeof PlatePrepared>;
 
 export const OrderCreateRequested = z.object({
   messageId: z.uuid(),
+  correlationId: z.uuid().optional(),
   count: z.number().int().positive(),
 });
 export type OrderCreateRequested = z.infer<typeof OrderCreateRequested>;
@@ -116,6 +124,7 @@ export const ReservationsQuery = z.object({
 });
 
 export const PurchasesQuery = z.object({
+  status: z.enum(['success', 'failed']).optional(),
   plateId: z.uuid().optional(),
   ingredient: z
     .enum([

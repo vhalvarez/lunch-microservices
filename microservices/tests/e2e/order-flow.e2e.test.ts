@@ -76,7 +76,14 @@ describe('E2E - Complete Order Flows', () => {
         name: 'bff',
         path: 'apps/bff/src/index.ts',
         env,
-        readyPattern: /bff up|Server listening/i,
+        readyPattern: /BFF MAIN STARTED/i,
+        timeout: 60000,
+      },
+      {
+        name: 'predictor-svc',
+        path: 'apps/predictor-svc/src/index.ts',
+        env,
+        readyPattern: /Starting predictor service|consuming.*started/i,
         timeout: 60000,
       },
     ];
@@ -296,7 +303,7 @@ async function findFreePort(start: number, end: number): Promise<number> {
         server.close();
         resolve(true);
       });
-      server.listen(port);
+      server.listen(port, '0.0.0.0');
     });
 
     if (isFree) return port;

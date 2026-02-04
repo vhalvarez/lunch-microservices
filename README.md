@@ -8,8 +8,8 @@ Este sistema fue diseñado para manejar la operación de un restaurante durante 
 
 - ✅ Gestión automática de órdenes
 - ✅ Control de inventario en tiempo real
-- ✅ Compras automáticas al mercado
-- ✅ Sistema de predicción con IA para prevenir escasez
+- ✅ Historial de compras detallado
+- ✅ Predicciones de tráfico y eficiencia con IA
 - ✅ Arquitectura de microservicios escalable
 
 ## 🏗️ Arquitectura
@@ -49,7 +49,7 @@ lunch-alegra-monorepo/
 - **Vue 3** - Framework progresivo
 - **TypeScript** - Tipado estático
 - **Vite** - Build tool ultrarrápido
-- **Tailwind CSS** - Framework de utilidades CSS
+- **Tailwind CSS v4** - Framework de utilidades CSS
 - **shadcn-vue** - Componentes UI basados en Reka UI
 - **TanStack Query** - Manejo de estado del servidor
 
@@ -167,7 +167,13 @@ pnpm dev
 - **Alertas Operacionales**: Identifica ingredientes con problemas
 - **Predicciones Inteligentes**: Recomendaciones basadas en IA
 - **Gráficos de Salud**: Visualización del estado del inventario
+- **Tráfico en Tiempo Real**: Gráfico de pedidos por hora vs capacidad
+- **Eficiencia de Cocina**: Gauge de rendimiento operativo
 - **Información del Sistema**: Detalles sobre Groq + Llama 3.1 8B
+
+### Historial de Mercado
+- Registro detallado de todas las transacciones de compra de ingredientes.
+- Filtros por estado (Exitoso/Fallido) y paginación real.
 
 ## 🤖 Sistema de Predicción con IA
 
@@ -311,6 +317,12 @@ SELECT * FROM schema_migrations;
 1. Verifica que el backend esté corriendo: http://localhost:3000/health
 2. Revisa `frontend/.env` que `VITE_API_URL=http://localhost:3000`
 3. Revisa la consola del navegador para errores CORS
+
+### Errores de Dependencias en Monorepo
+Si al construir el BFF obtienes errores de tipos con `@lunch/messaging` u otros paquetes:
+1. Ejecuta `pnpm install` en la raíz `microservices/` para refrescar symlinks.
+2. Reconstruye el paquete específico: `pnpm --filter messaging build`.
+3. Reintenta el build del servicio.
 
 ## 📈 Monitoreo
 

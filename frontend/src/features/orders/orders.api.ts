@@ -43,13 +43,15 @@ function mapStatus(wireStatus: string, isPrepared: boolean): Order['status'] {
 }
 
 export const ordersApi = {
-  async getAll(params: { limit: number; offset: number }): Promise<Order[]> {
+  async getAll(params: { limit: number; offset: number }): Promise<{ data: Order[]; total: number }> {
     const { data } = await http.get<OrdersResponse>('/reservations', { params });
-    return data.data.map((item) => ({
+    const orders = data.data.map((item) => ({
       id: item.plate_id,
       createdAt: item.created_at,
+      preparedAt: item.prepared_at,
       status: mapStatus(item.status, item.isPrepared),
     }));
+    return { data: orders, total: data.total };
   },
 
   async getDetail(plateId: string): Promise<OrderDetail> {

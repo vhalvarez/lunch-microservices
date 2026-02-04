@@ -30,17 +30,7 @@ export class MicroserviceManager extends EventEmitter {
 
     this.processes.set(config.name, childProcess);
 
-    if (config.name === 'bff') {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      console.log(`✅ ${config.name} process started (will verify HTTP later)`);
-      return;
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error(`${config.name} no inició a tiempo`));
-      }, config.timeout || 45000);
-
+    const setupLogging = (resolve: () => void, reject: (err: Error) => void) => {
       const readyPattern = config.readyPattern || /listening|started|ready|up/i;
       let alreadyResolved = false;
 
@@ -50,9 +40,11 @@ export class MicroserviceManager extends EventEmitter {
 
         if (!alreadyResolved && readyPattern.test(output)) {
           alreadyResolved = true;
-          clearTimeout(timeout);
-          console.log(`✅ ${config.name} started`);
-          resolve();
+          // If it's BFF, we resolve immediately in the special block below, but we keep logging.
+          // For others, we resolve here.
+          if (config.name !== 'bff') {
+            resolve();
+          }
         }
       });
 
@@ -64,7 +56,6 @@ export class MicroserviceManager extends EventEmitter {
       childProcess.on('error', (error) => {
         if (!alreadyResolved) {
           alreadyResolved = true;
-          clearTimeout(timeout);
           reject(error);
         }
       });
@@ -72,9 +63,32 @@ export class MicroserviceManager extends EventEmitter {
       childProcess.on('exit', (code) => {
         if (code !== 0 && code !== null && !alreadyResolved) {
           alreadyResolved = true;
-          clearTimeout(timeout);
           reject(new Error(`${config.name} exited with code ${code}`));
         }
+      });
+    };
+
+    if (config.name === 'bff') {
+      // Set up logging but resolve differently
+      setupLogging(() => { }, () => { });
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+      console.log(`✅ ${config.name} process started (assuming ready after 10s)`);
+      return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(`${config.name} no inició a tiempo`));
+      }, config.timeout || 45000);
+
+      // Hook up logging which also handles resolution
+      setupLogging(() => {
+        clearTimeout(timeout);
+        console.log(`✅ ${config.name} started`);
+        resolve();
+      }, (err) => {
+        clearTimeout(timeout);
+        reject(err);
       });
     });
   }

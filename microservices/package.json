@@ -14,6 +14,7 @@
     "migrate:down": "pnpm -F migrations migrate:down",
     "migrate:status": "pnpm -F migrations migrate:status",
     "migrate:rollback": "pnpm -F migrations migrate:rollback",
+    "db:reset": "docker exec lunch-pg psql -U postgres -d lunchday -c \"TRUNCATE TABLE market_purchases, prediction_alerts, prediction_consumption_analysis, prediction_purchase_analysis, predictions, reservation_items, reservations, stock RESTART IDENTITY CASCADE; INSERT INTO stock (ingredient, qty) VALUES ('tomato', 5), ('lemon', 5), ('potato', 5), ('rice', 5), ('ketchup', 5), ('lettuce', 5), ('onion', 5), ('cheese', 5), ('meat', 5), ('chicken', 5);\"",
     "clean:artifacts": "pnpm dlx rimraf --glob \"{apps,packages}/**/{dist,build,.turbo,.next,.nuxt,coverage,.cache,.parcel-cache,.eslintcache,.vite,.rollup.cache,.swc,*.tsbuildinfo}\"",
     "clean:modules": "pnpm dlx rimraf --glob \"{apps,packages}/**/node_modules\" node_modules",
     "clean:lock": "pnpm dlx rimraf pnpm-lock.yaml",

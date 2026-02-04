@@ -14,14 +14,16 @@
     "@lunch/db": "workspace:*",
     "@lunch/logger": "workspace:*",
     "@lunch/messaging": "workspace:*",
+    "@lunch/recipes": "workspace:*",
     "@lunch/redis": "workspace:*",
     "@lunch/shared-kernel": "workspace:*",
     "@lunch/utils": "workspace:*",
-    "@lunch/recipes": "workspace:*",
+    "opossum": "^9.0.0",
     "p-limit": "^7.1.1",
     "undici": "^7.16.0"
   },
   "devDependencies": {
+    "@types/opossum": "^8.1.9",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   }

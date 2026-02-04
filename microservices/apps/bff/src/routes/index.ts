@@ -9,9 +9,11 @@ import { registerReservationRoutes } from './reservations.js';
 import { registerPurchaseRoutes } from './purchases.js';
 import { registerStatsRoutes } from './stats.js';
 import { registerPredictionRoutes } from './predictions.js';
+import { registerSSERoutes } from './sse.js';
 
 export function registerRoutes(router: FastifyInstance, ctx: RouteContext) {
   registerHealthRoutes(router);
+  registerSSERoutes(router, ctx);
   registerOrderRoutes(router, ctx);
   registerRecipeRoutes(router);
   registerInventoryRoutes(router, ctx);

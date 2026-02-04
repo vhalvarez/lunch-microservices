@@ -29,6 +29,7 @@ export type IngredientName =
 export interface Order {
   id: string;
   createdAt: string;
+  preparedAt?: string | null;
   status: OrderStatus;
 }
 

@@ -50,6 +50,6 @@ export function getEnvironmentVariables(infra: TestInfrastructure): Record<strin
     REDIS_URL: `redis://${infra.redis.getHost()}:${infra.redis.getMappedPort(6379)}`,
     RMQ_PREFETCH: '10',
     BFF_PORT: '1500',
-    LOG_LEVEL: 'error',
+    LOG_LEVEL: 'info',
   };
 }

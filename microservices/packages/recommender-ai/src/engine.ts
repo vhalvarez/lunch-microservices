@@ -35,8 +35,8 @@ export class PredictionEngine {
     const groqEnabled = env.GROQ_ENABLED;
 
     log.info({ groqEnabled }, 'Checking Groq configuration');
-    log.info({ KEY: env.GROQ_API_KEY }, 'KEY');
-    
+    // Key log removed for security
+
     if (groqEnabled && env.GROQ_API_KEY) {
       try {
         this.aiClient = new GroqClient({
@@ -103,7 +103,7 @@ export class PredictionEngine {
       // Preparar datos para OpenAI solo si hay consumo significativo
       if (consumption.length >= this.config.minDataPoints) {
         const hoursUntilShortage = this.estimateHoursUntilShortage(consAnalysis, trend);
-        
+
         aiInputs.push({
           ingredient,
           currentStock: stock,
@@ -123,13 +123,13 @@ export class PredictionEngine {
     if (this.aiClient?.isEnabled() && aiInputs.length > 0) {
       try {
         log.info({ ingredients: aiInputs.length }, '🤖 Requesting Groq AI analysis (FREE)...');
-        
+
         // Analizar TODOS los ingredientes con datos suficientes
         for (const input of aiInputs) {
           try {
             const result = await this.aiClient.analyzePrediction(input);
             aiAnalysis.set(input.ingredient, result);
-            
+
             // Delay entre requests para respetar rate limits de Groq
             await new Promise(resolve => setTimeout(resolve, 2100));
           } catch (error) {
@@ -138,10 +138,10 @@ export class PredictionEngine {
         }
 
         log.info(
-          { 
-            analyzed: aiAnalysis.size, 
+          {
+            analyzed: aiAnalysis.size,
             total: aiInputs.length,
-            stats: this.aiClient.getUsageStats() 
+            stats: this.aiClient.getUsageStats()
           },
           '✅ AI analysis completed'
         );
@@ -155,11 +155,11 @@ export class PredictionEngine {
       const consAnalysis = consumptionAnalysis.find(c => c.ingredient === ingredient);
       const purchAnalysis = purchaseAnalysis.find(p => p.ingredient === ingredient);
       const trend = trends.find(t => t.ingredient === ingredient);
-      
+
       if (!consAnalysis || !purchAnalysis || !trend) continue;
 
       const aiResult = aiAnalysis.get(ingredient);
-      
+
       const alert = this.generateSmartAlert(
         ingredient,
         currentStock[ingredient] ?? 0,
@@ -169,7 +169,7 @@ export class PredictionEngine {
         historicalConsumption.length,
         aiResult,
       );
-      
+
       if (alert) alerts.push(alert);
     }
 
@@ -223,7 +223,7 @@ export class PredictionEngine {
 
     // Estimación conservadora
     const hoursUntilEmpty = consumption.currentStock / Math.max(adjustedRate, 0.1);
-    
+
     return hoursUntilEmpty > 0 ? hoursUntilEmpty : null;
   }
 
@@ -353,19 +353,19 @@ export class PredictionEngine {
       return null;
     }
 
-    const alerts: Array<{ 
-      type: string; 
-      severity: string; 
-      score: number; 
-      reason: string; 
-      actionable: string 
+    const alerts: Array<{
+      type: string;
+      severity: string;
+      score: number;
+      reason: string;
+      actionable: string
     }> = [];
 
     // Si tenemos análisis de IA, usarlo como prioridad
     if (aiResult) {
       const aiSeverity = aiResult.riskLevel;
       const aiScore = aiResult.confidence;
-      
+
       alerts.push({
         type: 'ai_prediction',
         severity: aiSeverity,
@@ -435,8 +435,8 @@ export class PredictionEngine {
     }
 
     // Priorizar alerta de IA si existe, sino tomar la más importante por score
-    const mainAlert = aiResult && alerts[0].type === 'ai_prediction' 
-      ? alerts[0] 
+    const mainAlert = aiResult && alerts[0].type === 'ai_prediction'
+      ? alerts[0]
       : alerts.sort((a, b) => b.score - a.score)[0];
 
     // Calcular confianza (mayor si viene de IA)

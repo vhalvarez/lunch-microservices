@@ -13,19 +13,21 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "fastify": "^5.6.0",
     "@fastify/cors": "^11.1.0",
+    "@fastify/rate-limit": "^10.3.0",
     "@lunch/config": "workspace:*",
-    "@lunch/logger": "workspace:*",
-    "@lunch/messaging": "workspace:*",
-    "@lunch/shared-kernel": "workspace:*",
-    "@lunch/recipes": "workspace:*",
     "@lunch/db": "workspace:*",
+    "@lunch/logger": "workspace:*",
+    "@lunch/bus": "workspace:*",
+    "@lunch/recipes": "workspace:*",
+    "@lunch/shared-kernel": "workspace:*",
+    "fastify": "^5.6.0",
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "tsu": "^2.2.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2",
-    "tsu": "^2.2.0"
+    "vitest": "^3.2.4"
   }
 }
