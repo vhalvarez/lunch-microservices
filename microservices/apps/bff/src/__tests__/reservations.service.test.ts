@@ -9,7 +9,7 @@ describe('ReservationsService', () => {
     beforeEach(() => {
         repo = {
             countReservations: vi.fn(),
-            getReservations: vi.fn(),
+            searchReservations: vi.fn(),
             getReservationById: vi.fn(),
             getReservationItems: vi.fn(),
             getMarketPurchasesForPlate: vi.fn(),
@@ -42,14 +42,14 @@ describe('ReservationsService', () => {
         expect(result.data).toHaveLength(1);
         expect(result.data[0].isPrepared).toBe(false);
         expect(repo.countReservations).toHaveBeenCalledWith({
-            status: '',
+            status: undefined,
             limit: undefined,
             offset: undefined,
             prepared: undefined,
             plateId: undefined
         });
         expect(repo.searchReservations).toHaveBeenCalledWith({
-            status: '',
+            status: undefined,
             limit: 10,
             offset: 0,
             prepared: undefined,
