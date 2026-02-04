@@ -10,6 +10,12 @@
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
+<div align="center">
+  <img src="kitchen-dashboard.gif" alt="Dashboard Demo" width="100%" />
+</div>
+
+<br/>
+
 Sistema completo de gestión automatizada para eventos masivos de donación de comida, con análisis predictivo impulsado por IA.
 
 ## 📋 Descripción del Proyecto
@@ -22,7 +28,8 @@ Este sistema fue diseñado para manejar la operación de un restaurante durante 
 - ✅ Predicciones de tráfico y eficiencia con IA
 - ✅ Arquitectura de microservicios escalable
 
-![Dashboard Demo](./kitchen-dashboard.gif)
+- ✅ Predicciones de tráfico y eficiencia con IA
+- ✅ Arquitectura de microservicios escalable
 
 ## 🏗️ Arquitectura
 
@@ -421,7 +428,7 @@ docker exec postgres pg_isready -U lunch
 
 ## 👥 Contribuciones
 
-Este proyecto fue desarrollado como parte del desafío técnico de Alegra.
+Este proyecto fue desarrollado con fines educativos y de demostración técnica.
 
 ## 📄 Licencia
 
@@ -429,4 +436,4 @@ Este proyecto es privado y fue creado con fines de evaluación técnica.
 
 ---
 
-**Desarrollado con** ❤️ **para el Desafío Técnico de Alegra**
+**Desarrollado con** ❤️
